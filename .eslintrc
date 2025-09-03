@@ -19,7 +19,9 @@
     "Draggable": "readonly",
     "InertiaPlugin": "readonly",
     "barba": "readonly",
-    "$": "readonly"
+    "$": "readonly",
+    "Webflow": "readonly",
+    "Lenis": "readonly"
   },
   "extends": ["eslint:recommended", "plugin:prettier/recommended"],
   "plugins": ["import", "sort-imports-es6-autofix"],

@@ -11,10 +11,28 @@
     "jest": true,
     "browser": true
   },
+  "globals": {
+    "gsap": "readonly",
+    "ScrollTrigger": "readonly",
+    "CustomEase": "readonly",
+    "SplitText": "readonly",
+    "Draggable": "readonly",
+    "InertiaPlugin": "readonly",
+    "barba": "readonly",
+    "$": "readonly"
+  },
   "extends": ["eslint:recommended", "plugin:prettier/recommended"],
   "plugins": ["import", "sort-imports-es6-autofix"],
   "rules": {
     "@typescript-eslint/explicit-module-boundary-types": "off",
+    "no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
     "import/order": [
       "error",
       {

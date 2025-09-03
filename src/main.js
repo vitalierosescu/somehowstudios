@@ -1,4 +1,4 @@
-/* global gsap, ScrollTrigger, CustomEase, SplitText, Draggable, InertiaPlugin, barba, $ */
+/* global gsap, ScrollTrigger, CustomEase, SplitText, Draggable, InertiaPlugin, barba, Webflow, Lenis $ */
 ;(() => {
   // src/app.js
   gsap.registerPlugin(
@@ -406,7 +406,7 @@
         {
           namespace: 'project-detail',
           afterEnter() {
-            initProjectDetailPage()
+            //initProjectDetailPage()
           },
         },
         {
@@ -433,7 +433,7 @@
         },
       ],
     })
-    function initSmoothScroll(container) {
+    function initSmoothScroll() {
       initLenis()
       ScrollTrigger.refresh()
     }

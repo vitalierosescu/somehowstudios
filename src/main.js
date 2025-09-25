@@ -1,16 +1,531 @@
 ;(() => {
-  CustomEase.create('hop', '0.9, 0, 0.1, 1')
+  // CustomEase.create('ease-transition', '0.9, 0, 0.1, 1')
+  gsap.registerPlugin(ScrollTrigger, CustomEase, SplitText)
+  CustomEase.create('ease-primary', '0.87, 0, 0.13, 1')
+  CustomEase.create('ease-secondary', '0.16, 1, 0.35, 1')
+  CustomEase.create('ease-tertiary', '0.53, 0.23, 0.25, 1')
+  CustomEase.create('ease-menu', '.7,0,.22,1')
+  CustomEase.create('ease-transition', '0.9, 0, 0.1, 1')
+  CustomEase.create('ease-textloader', '0.83, 0, 0.17, 1')
   let lenis
+  var transitionOffset = 375
+  var transitionNormal = 0.875
+  var transitionSlider = 1
+  var isMobileScreen = window.matchMedia('(max-width: 767px)').matches
 
-  const initLenis = () => {
+  function initCheckWindowHeight() {
+    // https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
+    let vh = window.innerHeight * 0.01
+    document.documentElement.style.setProperty('--vh-in-px', `${vh}px`)
+  }
+
+  // initPageTransitions()
+  /*
+  function pageTransitionIn() {
+    const tl = gsap.timeline()
+    tl.set(
+      '.transition_screen',
+      {
+        autoAlpha: 0,
+      },
+      0
+    )
+    tl.to(
+      '.transition_screen',
+      {
+        autoAlpha: 1,
+        ease: 'ease-secondary',
+        duration: 0.35,
+      },
+      0
+    )
+    return tl
+  }
+  function pageTransitionOut() {
+    // document.body.removeAttribute('data-lenis-prevent')
+    // document.body.classList.remove('overflow-hidden')
+    const textAnimationTransition = document.querySelectorAll(
+      '[data-split-animation][data-lines-split]'
+    )
+    if (textAnimationTransition.length) {
+      textAnimationTransition.forEach((element) => {
+        const tl = gsap.timeline()
+        const parentSplit = element.parentSplit
+        const childSplit = element.childSplit
+        if (!parentSplit || !childSplit) return
+        tl.fromTo(
+          childSplit.lines,
+          {
+            yPercent: 120,
+            rotate: 0.001,
+            ease: 'ease-secondary',
+            duration: transitionSlider,
+            stagger: 0.0825,
+          },
+          {
+            yPercent: 0,
+            rotate: 0,
+            ease: 'ease-secondary',
+          }
+        )
+      })
+    }
+    if (document.querySelector('[data-image-transition-anim]')) {
+      const coverContainers = document.querySelectorAll(
+        '[data-image-transition-anim]'
+      )
+      coverContainers.forEach((coverContainer) => {
+        const cover = coverContainer.querySelector('[data-image-cover]')
+        const image = coverContainer.querySelector('[data-image]')
+        if (cover && image) {
+          gsap.set(image, { scale: 1.1 })
+          const animate = () => {
+            const tl = gsap.timeline()
+            tl.to(
+              image,
+              {
+                scale: 1,
+                duration: 1.2,
+                ease: 'ease-secondary',
+              },
+              0
+            ).to(
+              cover,
+              {
+                autoAlpha: 0,
+                duration: 0.6,
+              },
+              0
+            )
+          }
+          if (image.complete) {
+            animate()
+          } else {
+            image.onload = animate
+          }
+        }
+      })
+    }
+    if (document.querySelector('.navbar_wrap')) {
+      const tl = gsap.timeline()
+      gsap.defaults({
+        ease: 'ease-secondary',
+        duration: transitionSlider,
+      })
+      tl.from(
+        '.navbar_home',
+        {
+          yPercent: 120,
+          rotate: 0.001,
+        },
+        0.1
+      )
+        .from(
+          '.navbar_links_li',
+          {
+            yPercent: 200,
+            rotate: 0.001,
+            stagger: 0.0625,
+          },
+          '-=0.9'
+        )
+        .from(
+          '.navbar_cta_contain',
+          {
+            yPercent: 120,
+            rotate: 0.001,
+          },
+          '-=1'
+        )
+        .from(
+          '.navbar_menu_text',
+          {
+            yPercent: 120,
+            rotate: 0.001,
+          },
+          '-=0.9'
+        )
+    }
+    if (document.querySelector('.hero_image_contain')) {
+      const tl = gsap.timeline()
+      gsap.set('.hero_image_contain', {
+        scale: 1.1,
+        filter: 'blur(5px)',
+      })
+      tl.to(
+        '.hero_image_contain',
+        {
+          scale: 1,
+          filter: 'blur(0px)',
+          duration: 1.8,
+          ease: 'ease-secondary',
+        },
+        '<'
+      )
+    }
+    if (document.querySelector('.hero_collection_details')) {
+      const tl = gsap.timeline()
+      tl.from('.hero_collection_details > *', {
+        yPercent: 200,
+        rotate: 0.001,
+        ease: 'ease-secondary',
+        duration: transitionSlider,
+        stagger: 0.125,
+      })
+    }
+    if (document.querySelector('.gallery_tooltip_wrap')) {
+      const tl = gsap.timeline()
+      tl.from(
+        '.gallery_tooltip_wrap',
+        {
+          yPercent: 150,
+          rotate: 0.001,
+          ease: 'ease-secondary',
+          duration: 1.2,
+        },
+        0.8
+      )
+    }
+    if (document.querySelector('.gallery_item')) {
+      const tl = gsap.timeline()
+      tl.from(
+        '.gallery_item',
+        {
+          filter: 'blur(5px)',
+          scale: 0.9,
+          rotate: 0.001,
+          stagger: {
+            amount: 0.155,
+            from: 'center',
+          },
+          ease: 'ease-secondary',
+          duration: 1.2,
+        },
+        '<'
+      )
+    }
+    if (document.querySelector('.hero_works_wrap')) {
+      const filterWrap = document.querySelector('.works_filter_wrap')
+      const filterLinks = filterWrap.querySelectorAll('.g_link')
+      const tl = gsap.timeline()
+      if (isMobileScreen) {
+        tl.from('.works_bottom_content, .works_bottom_scroll', {
+          yPercent: 120,
+          rotate: 0.001,
+          stagger: 0.175,
+          ease: 'ease-secondary',
+          duration: transitionSlider,
+        }).from(
+          filterLinks,
+          {
+            yPercent: 120,
+            rotate: 0.001,
+            stagger: 0.035,
+            ease: 'ease-secondary',
+            duration: transitionSlider,
+          },
+          '-=0.8'
+        )
+      } else {
+        gsap.set('[data-clip-container]', {
+          clipPath: 'polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%)',
+          overwrite: 'auto',
+        })
+        tl.to(
+          '[data-clip-container]',
+          {
+            clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)',
+            ease: 'ease-secondary',
+            duration: 1.2,
+          },
+          0.1
+        )
+          .from(
+            '.works_bottom_content, .works_bottom_scroll',
+            {
+              yPercent: 120,
+              rotate: 0.001,
+              stagger: 0.175,
+              ease: 'ease-secondary',
+              duration: transitionSlider,
+            },
+            '-=0.9'
+          )
+          .from(
+            filterLinks,
+            {
+              yPercent: 120,
+              rotate: 0.001,
+              stagger: 0.035,
+              ease: 'ease-secondary',
+              duration: transitionSlider,
+            },
+            '-=0.9'
+          )
+      }
+    }
+    const studioSvg = document.querySelector('.hero_studio_svg')
+    if (studioSvg) {
+      const tl = gsap.timeline()
+      tl.from('.hero_studio_path', {
+        yPercent: 120,
+        stagger: {
+          amount: 0.225,
+          from: 'end',
+        },
+        ease: 'ease-secondary',
+        duration: 1.6,
+      })
+    }
+    if (document.querySelector('.hero_project_wrap')) {
+      const tl = gsap.timeline()
+      gsap.set('.hero_project_thumbnail', {
+        scale: 1.05,
+      })
+      tl.to(
+        '.hero_project_thumbnail',
+        {
+          scale: 1,
+          duration: 1.8,
+          ease: 'ease-secondary',
+        },
+        '<'
+      ).from(
+        '[data-details-animation]',
+        {
+          yPercent: 200,
+          rotate: 0.001,
+          stagger: 0.0825,
+          ease: 'ease-secondary',
+          duration: transitionSlider,
+        },
+        '-=1.5'
+      )
+    }
+    if (document.querySelector('.terms_wrap')) {
+      const tl = gsap.timeline()
+      tl.from(
+        '.terms_rich_text',
+        {
+          autoAlpha: 0,
+          y: 50,
+          ease: 'ease-secondary',
+          duration: transitionSlider,
+        },
+        0.5
+      )
+    }
+    if (document.querySelector('.precedent_item_wrap')) {
+      const tl = gsap.timeline()
+      tl.from('.precedent_item_wrap', {
+        yPercent: 120,
+        stagger: 0.0825,
+        ease: 'ease-secondary',
+        duration: transitionSlider,
+      })
+    }
+  }
+    
+  function initPageTransitions() {
+    async function commonLeaveBefore(data) {
+      const body = document.body
+      const isMenuOpen = body.dataset.navigationStatus === 'is-open'
+      if (isMenuOpen) {
+        body.dataset.navigationStatus = 'is-closed'
+        //animateMenuClose()
+      }
+      document
+        .querySelectorAll('[data-navigation-status]')
+        .forEach((el) => el.setAttribute('data-navigation-status', 'is-closed'))
+      pageTransitionIn(data.current)
+    }
+    async function commonLeaveAfter(data) {
+      killAllScrollTriggers()
+      data.current.container.remove()
+      cleanupSplitTexts()
+    }
+    async function commonBeforeEnter(data) {
+      ScrollTrigger.getAll().forEach((t) => t.kill())
+      initResetWebflow(data)
+      initSmoothScroll(data.next.container)
+      initScript()
+    }
+    async function commonEnter(data) {
+      gsap.to('.transition_screen', {
+        autoAlpha: 0,
+        ease: 'ease-secondary',
+        duration: transitionNormal,
+      })
+      pageTransitionOut(data.next)
+    }
+    barba.hooks.after((data) => {
+      ScrollTrigger.refresh()
+    })
+    barba.init({
+      sync: true,
+      preventRunning: true,
+      timeout: 7000,
+      transitions: [
+        {
+          name: 'default',
+          async leave(data) {
+            await commonLeaveBefore(data)
+            await delay(transitionOffset)
+            await commonLeaveAfter(data)
+          },
+          async beforeEnter(data) {
+            await commonBeforeEnter(data)
+          },
+          async enter(data) {
+            await commonEnter(data)
+          },
+          once(data) {
+            initSmoothScroll(data.next.container)
+            // initLoader()
+            initScript()
+          },
+        },
+      ],
+      views: [
+        {
+          namespace: 'gallery',
+          afterEnter() {
+            // initGalleryPage()
+            var vids = document.querySelectorAll('video')
+            vids.forEach((vid) => {
+              var playPromise = vid.play()
+              if (playPromise !== undefined) {
+                playPromise.then((_) => {}).catch((error) => {})
+              }
+            })
+          },
+        },
+        {
+          namespace: 'home',
+          afterEnter() {
+            // initHomePage()
+            console.log('home')
+          },
+        },
+        {
+          namespace: 'process',
+          afterEnter() {
+            // initProcessPage()
+          },
+        },
+        {
+          namespace: 'project-detail',
+          afterEnter() {
+            //initProjectDetailPage()
+          },
+        },
+        {
+          namespace: 'studio',
+          afterEnter() {
+            //initStudioPage()
+          },
+        },
+        {
+          namespace: 'works',
+          afterEnter() {
+            // if (worksPageCleanup) {
+            //   worksPageCleanup()
+            //   worksPageCleanup = null
+            // }
+            // worksPageCleanup = initWorksPage()
+          },
+        },
+        {
+          namespace: 'precedent-detail',
+          afterEnter() {
+            //initPrecedentPages()
+          },
+        },
+      ],
+    })
+    function initSmoothScroll() {
+      initLenis()
+      ScrollTrigger.refresh()
+    }
+    function killAllScrollTriggers() {
+      if (typeof ScrollTrigger !== 'undefined') {
+        ScrollTrigger.killAll()
+      }
+    }
+    history.scrollRestoration = 'manual'
+  }
+    */
+
+  function initResetWebflow(data) {
+    let parser = new DOMParser()
+    let dom = parser.parseFromString(data.next.html, 'text/html')
+    let webflowPageId = $(dom).find('html').attr('data-wf-page')
+    $('html').attr('data-wf-page', webflowPageId)
+    window.Webflow && window.Webflow.destroy()
+    window.Webflow && window.Webflow.ready()
+    const ix2 = window.Webflow?.require('ix2')
+    if (typeof ix2 !== 'undefined') {
+      ix2.init()
+    }
+    $('.w--current').removeClass('w--current')
+    $('a').each(function () {
+      if ($(this).attr('href') === window.location.pathname) {
+        $(this).addClass('w--current')
+      }
+    })
+  }
+
+  function delay(n) {
+    n = n || 2000
+    return new Promise((done) => {
+      setTimeout(() => {
+        done()
+      }, n)
+    })
+  }
+
+  var activeSplitTexts = []
+
+  function cleanupSplitTexts() {
+    activeSplitTexts.forEach((splitObj) => {
+      if (splitObj && typeof splitObj.revert === 'function') {
+        splitObj.revert()
+      }
+    })
+    activeSplitTexts = []
+    document.querySelectorAll('[data-split-initialized]').forEach((el) => {
+      el.removeAttribute('data-split-initialized')
+    })
+    // if (worksPageCleanup) {
+    //   worksPageCleanup()
+    //   worksPageCleanup = null
+    // }
+  }
+
+  function initLenis() {
     if (Webflow.env('editor')) return
     lenis = new Lenis({
       duration: 0.8,
+      infinite: true,
+      syncTouch: true,
     })
+
     function raf(time) {
       lenis.raf(time)
       requestAnimationFrame(raf)
     }
+
+    lenis.scrollTo(0, {
+      offset: 0,
+      duration: 0.2,
+      force: true,
+      onComplete: () => {
+        lenis.stop()
+      },
+    })
+
+    // lenis.scrollTo(0, 0)
+
     requestAnimationFrame(raf)
   }
 
@@ -101,18 +616,12 @@
     )
   }
 
-  const initPreloader = (lenis) => {
-    //const divider = document.querySelector('.loader_divider')
-
-    // stop Lenis if available
-    if (lenis && typeof lenis.stop === 'function') {
-      lenis.stop()
-    }
-
+  const initInitialLoader = (lenis) => {
     const tl = gsap.timeline({
       delay: 0.3,
-      defaults: { ease: 'hop', duration: 1 },
+      defaults: { ease: 'ease-transition', duration: 1 },
     })
+    document.body.style.cursor = 'wait'
 
     gsap.set('.loader_emblem-wrap.is-2', { color: '#fdffdd' })
 
@@ -135,11 +644,15 @@
     )
 
     // filled svg
-    tl.from('.loader_emblem.is-filled', { scale: 1.1, duration: 1.5 }, '<-.9')
-
+    tl.fromTo(
+      '.loader_emblem.is-filled',
+      { scale: 1.1 },
+      { scale: 1, duration: 1.7 },
+      '<-.9'
+    )
     tl.from(
       '.loader_emblem.is-path path',
-      { drawSVG: 0, ease: 'power2.inOut', duration: 4, delay: 0.4 },
+      { drawSVG: 0, ease: 'power2.inOut', duration: 5, delay: 0.4 },
       0
     )
 
@@ -151,16 +664,14 @@
         stagger: 0.1,
         delay: 0.75,
         onStart: () => {
-          //gsap.to('.hero-img', { scale: 1, duration: 2, ease: 'hop' })
+          //gsap.to('.hero-img', { scale: 1, duration: 2, ease: 'ease-transition' })
         },
         onComplete: () => {
           const loader = document.querySelector('.loader')
           if (loader) loader.style.pointerEvents = 'none'
+          document.body.style.cursor = 'default'
 
-          // restart Lenis if available
-          if (lenis && typeof lenis.start === 'function') {
-            lenis.start()
-          }
+          lenis.start()
         },
       },
       '<+1'
@@ -168,14 +679,17 @@
 
     tl.to('.nav_logo-svg', { y: '0%', delay: 0, duration: 1.5 }, '<+1')
     tl.from('.nav_counter', { y: '100%', duration: 1.5 }, '<+=.1')
-    tl.from(
+
+    tl.fromTo(
       '.nav_wrapper .button_text',
-      { y: '100%', stagger: 0.1, duration: 1.5 },
+      { y: '100%' },
+      { y: '0%', duration: 1.5, stagger: 0.1 },
       '<+=.1'
     )
-    tl.from(
+    tl.fromTo(
       '.nav_wrapper .button_bg',
-      { opacity: 0, scale: 0.8, stagger: 0.1, duration: 2 },
+      { opacity: 0, scale: 0.8 },
+      { opacity: 1, scale: 1, stagger: 0.1, duration: 2 },
       '<+=.1'
     )
   }
@@ -225,227 +739,240 @@
     })
   }
 
-  const initServices = () => {
-    const mm = gsap.matchMedia()
-    const services = gsap.utils.toArray('.service_card')
-    if (!services.length) return
-
-    // get a sensible container to pin
-    const container =
-      document.querySelector('.services') ||
-      services[0].closest('.services') ||
-      services[0].parentElement
-
-    // remove CSS overlap during measurements
-    gsap.set(services, { marginTop: 'unset' })
-
-    mm.add('(min-width: 1001px)', () => {
-      // build one scrubbed timeline that controls all cards
-      const seg = services.map(() => ({ v: 0 }))
-
-      const getGap = () => {
-        // tune this to your design
-        const mt =
-          parseFloat(
-            getComputedStyle(services[1] || services[0]).marginTop || '0'
-          ) || 0
-        return mt || 0
-      }
-
-      let gap = getGap()
-
-      const tl = gsap.timeline({
-        paused: true,
-        onUpdate: () => {
-          let cum = 0
-          services.forEach((el, i) => {
-            if (i === 0) return
-            cum += seg[i].v
-            gsap.set(el, { y: cum * gap })
-          })
-        },
+  function initSplitText() {
+    const lineElements = document.querySelectorAll('[data-lines-split]')
+    if (lineElements.length) {
+      lineElements.forEach((element) => {
+        if (element.hasAttribute('data-split-initialized')) {
+          return
+        }
+        const parentSplit = new SplitText(element, {
+          type: 'lines',
+          linesClass: 'split-parent',
+        })
+        const childSplit = new SplitText(parentSplit.lines, {
+          type: 'lines',
+          linesClass: 'split-child',
+        })
+        element.parentSplit = parentSplit
+        element.childSplit = childSplit
+        element.setAttribute('data-split-initialized', 'true')
+        activeSplitTexts.push(parentSplit, childSplit)
       })
+    }
+  }
 
-      // add a flat segment per card
-      for (let i = 1; i < services.length; i++) {
-        tl.to(seg[i], { v: 1, duration: 1, ease: 'none' }, '>')
-      }
+  function initScrollTriggerAnimations() {
+    const lineAnimElements = document.querySelectorAll(
+      '[data-lines-split][data-animate-scroll]'
+    )
 
-      // single pin, single spacer
-      const st = ScrollTrigger.create({
-        trigger: container,
-        pin: true,
-        pinSpacing: true, // one spacer only
-        start: 'top top',
-        end: () => `+=${container.scrollHeight - services[0].clientHeight}`,
-        scrub: true,
-        invalidateOnRefresh: true,
-        onRefreshInit: () => {
-          gap = getGap()
-        },
-        onUpdate: (self) => tl.progress(self.progress),
-      })
-
-      // optional per-card inner shift during scroll
-      const second = services[1] || services[0]
-      const inners = services
-        .map((s) => s.querySelector('.service_card-inner'))
-        .slice(1)
-
-      inners.forEach((inner, index) => {
-        if (!inner) return
-        gsap.to(inner, {
-          y: `-${(services.length + index) * 15.6}rem`,
-          ease: 'none',
+    if (lineAnimElements.length) {
+      lineAnimElements.forEach((element) => {
+        const parentSplit = element.parentSplit
+        const childSplit = element.childSplit
+        console.log(childSplit)
+        if (!parentSplit || !childSplit) return
+        // Animate from initial offset; ensure "from" state renders immediately
+        gsap.from(childSplit.lines, {
+          yPercent: 120,
+          rotate: 0.001,
+          duration: transitionSlider,
+          ease: 'ease-secondary',
+          stagger: 0.0625,
           scrollTrigger: {
-            trigger: second, // 2nd service item
-            start: 'bottom bottom', // when its bottom hits viewport bottom
-            end: () => `+=${container.scrollHeight - services[0].clientHeight}`,
-            scrub: true,
-            markers: true,
+            trigger: element,
+            start: 'top 80%',
+            toggleActions: 'play none none none',
           },
         })
       })
-
-      return () => {
-        st.kill()
-        tl.kill()
-        gsap.set(services, { clearProps: 'y' })
-        inners.forEach((i) => i && gsap.set(i, { clearProps: 'y' }))
-      }
-    })
-
-    mm.add('(max-width: 1000px)', () => {
-      // mobile, no pinning
-      gsap.set(services, { clearProps: 'y' })
-    })
-
-    // handle resize
-    window.addEventListener('resize', () => ScrollTrigger.refresh())
+    }
   }
 
-  const initTextAnimation = () => {
-    if (!window.gsap || !window.SplitType) {
-      console.error(
-        'AnimatedCopy: gsap and SplitType must be loaded before this script.'
-      )
-      return
-    }
+  if (document.querySelector('.section-work-scroll')) {
+    $('.section-work-scroll').each(function (index) {
+      let triggerElement = $(this)
+      let slidesAmount = $(this).attr('data-slides-amount')
+      let targetElement = $(this).find('.single-work-slide')
+      let targetThumbList = $(this).find('.thumbnail-list')
 
-    var gsap = window.gsap
-    var ScrollTrigger = window.ScrollTrigger
-    if (ScrollTrigger && !gsap.core.globals().ScrollTrigger) {
-      gsap.registerPlugin(ScrollTrigger)
-    }
-
-    window.initAnimatedCopy = function initAnimatedCopy(target, opts) {
-      opts = opts || {}
-      var delay = opts.delay != null ? opts.delay : 0
-      var duration = opts.duration != null ? opts.duration : 1
-      var ease = opts.ease || 'power4.out'
-      var stagger = opts.stagger != null ? opts.stagger : 0.05
-      var lineSelector = opts.lineSelector || ''
-      var animateOnScroll = opts.animateOnScroll !== false
-      var direction = opts.direction === 'top' ? 'top' : 'bottom'
-      var start = opts.start || 'top 80%'
-
-      var el =
-        typeof target === 'string' ? document.querySelector(target) : target
-      if (!el) return null
-      if (el.dataset.acInitialized === 'true') return el._ac
-
-      var id = 'copy-' + Math.floor(Math.random() * 10000)
-      var lineClass = 'line-' + id
-      var split = new window.SplitType(el, {
-        types: 'lines',
-        lineClass: lineClass,
+      let tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: triggerElement,
+          start: 'top top',
+          end: 'bottom bottom',
+          markers: true,
+          scrub: 0,
+        },
       })
 
-      var selector = lineSelector || '.' + lineClass
-      var lines = Array.prototype.slice.call(
-        document.querySelectorAll(selector)
+      tl.fromTo(
+        targetThumbList,
+        {
+          yPercent: 0,
+        },
+        {
+          yPercent: ((slidesAmount - 1) / slidesAmount) * -100,
+          ease: 'none',
+        }
       )
-      var innerClass = 'line-inner-' + id
+    })
 
-      lines.forEach(function (line) {
-        var html = line.innerHTML
-        line.innerHTML =
-          '<span class="' +
-          innerClass +
-          '" style="display:block">' +
-          html +
-          '</span>'
-      })
+    // Check the index of section in view
+    function checkIndexSection() {
+      var indexSections = document.querySelectorAll('[data-work-height-index]')
+      var indexSectionsCount = $('[data-slides-amount]').attr(
+        'data-slides-amount'
+      )
 
-      var initialY = direction === 'top' ? '-100%' : '100%'
-      gsap.set('.' + innerClass, { y: initialY })
+      for (var i = 0; i < indexSections.length; i++) {
+        var indexSection = indexSections[i]
+        var indexSectionTop = indexSection.getBoundingClientRect().top
+        var indexSectionBottom = indexSection.getBoundingClientRect().bottom
+        var indexObserverOffset = window.innerHeight / 2
 
-      var tlConfig = { defaults: { ease: ease, duration: duration } }
-      if (animateOnScroll && ScrollTrigger) {
-        tlConfig.scrollTrigger = {
-          trigger: el,
-          start: start,
-          toggleActions: 'play none none none',
+        if (
+          indexSectionTop <= indexObserverOffset &&
+          indexSectionBottom >= indexObserverOffset
+        ) {
+          var singleSectionIndex = $(indexSection).attr(
+            'data-work-height-index'
+          )
+          var currentSlide = parseInt(singleSectionIndex)
+          if (
+            $('[data-slide-index-active]').attr('data-slide-index-active') ==
+            singleSectionIndex
+          ) {
+            // do nothing
+          } else {
+            var currentSlidePercentage =
+              ((currentSlide - 1) / indexSectionsCount) * -100 + '%'
+            $('[data-slide-index-active]').attr(
+              'data-slide-index-active',
+              singleSectionIndex
+            )
+            $('.current-slide-index-change').text(singleSectionIndex)
+            $('.section-work-scroll').css(
+              '--current-slide-precentage',
+              currentSlidePercentage
+            )
+            $('[data-slide-item-index]').attr(
+              'data-slide-item-status',
+              'not-active'
+            )
+            // $('[data-slide-item-index="' + (parseInt(singleSectionIndex)) +  '"]').prevAll().attr('data-slide-item-status', 'transition-out');
+            $(
+              '[data-slide-item-index="' + parseInt(singleSectionIndex) + '"]'
+            ).attr('data-slide-item-status', 'active')
+            // $('[data-slide-item-index="' + (parseInt(singleSectionIndex)) +  '"]').nextAll().attr('data-slide-item-status', 'transition-in');
+          }
+          $(
+            '[data-thumb-video-status][data-slide-item-index="' +
+              parseInt(singleSectionIndex) +
+              '"]'
+          )
+            .attr('data-thumb-video-status', 'active')
+            .find('video')
+            .trigger('play')
+          $(
+            '[data-thumb-video-status][data-slide-item-index="' +
+              parseInt(singleSectionIndex) +
+              '"]'
+          )
+            .siblings()
+            .attr('data-thumb-video-status', 'not-active')
+            .find('video')
+            .trigger('pause')
         }
       }
-
-      var tl = gsap.timeline(tlConfig)
-      tl.to('.' + innerClass, { y: '0%', stagger: stagger, delay: delay })
-
-      el.dataset.acInitialized = 'true'
-      el._ac = {
-        element: el,
-        timeline: tl,
-        split: split,
-        kill: function () {
-          try {
-            tl.kill()
-          } catch (e) {}
-          if (animateOnScroll && ScrollTrigger) {
-            var sts = ScrollTrigger.getAll()
-            for (var i = 0; i < sts.length; i++) {
-              if (sts[i].vars.trigger === el) sts[i].kill()
-            }
-          }
-          try {
-            split.revert()
-          } catch (e) {}
-          el.dataset.acInitialized = 'false'
-          el._ac = null
-        },
-      }
-      return el._ac
     }
 
-    // Optional auto init: elements with data-animated-copy
-    document.addEventListener('DOMContentLoaded', function () {
-      var autoEls = document.querySelectorAll('[data-animated-copy]')
-      autoEls.forEach(function (el) {
-        if (el.dataset.acInitialized === 'true') return
-        window.initAnimatedCopy(el, {
-          delay: parseFloat(el.dataset.acDelay || '0') || 0,
-          duration: parseFloat(el.dataset.acDuration || '1') || 1,
-          ease: el.dataset.acEase || 'power4.out',
-          stagger: parseFloat(el.dataset.acStagger || '0.05') || 0.05,
-          animateOnScroll: el.dataset.acScroll === 'false' ? false : true,
-          direction: el.dataset.acDirection || 'bottom',
-          start: el.dataset.acStart || 'top 80%',
-        })
-      })
+    // Check when scrolling
+    document.addEventListener('scroll', function () {
+      checkIndexSection()
+    })
+
+    checkIndexSection()
+  }
+
+  /** Nav scroll progress */
+  function initScrollProgressNumber() {
+    const progressCounter = document.querySelector('[data-progress-nr]')
+
+    ScrollTrigger.create({
+      trigger: document.body,
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 0.5,
+      onUpdate: (self) => {
+        const progress = Math.round(self.progress * 100) // Calculate progress as a percentage
+        progressCounter.textContent = progress.toString().padStart(2, '0') // Update counter
+      },
     })
   }
 
-  const init = () => {
+  // Handle click on elements with data-link="about" and animate targets
+  function initAboutLinkAnimation() {
+    const trigger = document.querySelector('[data-link="about"]')
+    if (!trigger) return
+
+    const targets = []
+    const aboutSection = document.querySelector('.section_about')
+    const mainWrapper = document.querySelector('.main-wrapper')
+    const loader = document.querySelector('.loader_container')
+    loader.style.zIndex = 0
+    const navigation = document.querySelector('.navigation')
+    targets.push(navigation)
+    targets.push(loader)
+    targets.push(mainWrapper)
+
+    if (!aboutSection || !mainWrapper) return
+
+    // build timeline
+    const tl = gsap.timeline({
+      paused: true,
+      reversed: true,
+      onStart: () => {
+        // starting to play forward -> stop scroll
+        lenis.stop()
+      },
+      onReverseComplete: () => {
+        // finished reversing -> resume scroll
+        lenis.start()
+      },
+    })
+
+    tl.to(targets, {
+      marginTop: '20rem',
+      duration: 1.6,
+      ease: 'ease-primary',
+    })
+
+    trigger.addEventListener('click', (event) => {
+      if (trigger.tagName === 'A') event.preventDefault()
+
+      if (tl.reversed()) {
+        tl.play()
+      } else {
+        tl.reverse()
+      }
+    })
+  }
+
+  const initScript = () => {
     initLenis()
-    initPreloader(lenis)
+    initInitialLoader(lenis)
     initButton()
+    initCheckWindowHeight()
     initParallax()
     initHomeHero()
     initNavMobile()
-    initTextAnimation()
-
-    initServices()
+    initSplitText()
+    initScrollTriggerAnimations()
+    initScrollProgressNumber()
+    initAboutLinkAnimation()
   }
 
-  init()
+  initScript()
 })()

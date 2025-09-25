@@ -23,10 +23,12 @@ export default defineConfig(({ command }) => {
       hmr: {
         host: 'localhost',
         protocol: 'ws',
+        overlay: false,
       },
     },
     build: {
-      minify: true,
+      // Do not minify on production build
+      minify: false,
       manifest: true,
       rollupOptions: {
         input: './src/main.js',
@@ -34,7 +36,8 @@ export default defineConfig(({ command }) => {
           format: 'umd',
           entryFileNames: 'main.js',
           esModule: false,
-          compact: true,
+          // Keep output readable
+          compact: false,
           globals: {
             jquery: '$',
           },

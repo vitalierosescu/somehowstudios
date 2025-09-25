@@ -1,12 +1,6 @@
 ;(() => {
   // src/app.js
-  gsap.registerPlugin(
-    ScrollTrigger,
-    CustomEase,
-    SplitText,
-    Draggable,
-    InertiaPlugin
-  )
+  gsap.registerPlugin(ScrollTrigger, CustomEase, SplitText, InertiaPlugin)
   CustomEase.create('ease-primary', '0.87, 0, 0.13, 1')
   CustomEase.create('ease-secondary', '0.16, 1, 0.35, 1')
   CustomEase.create('ease-tertiary', '0.53, 0.23, 0.25, 1')
@@ -487,7 +481,7 @@
     }
   }
   function initSplitText() {
-    const lineElements = document.querySelectorAll('[data-lines-split]')
+    const lineElements = document.querySelectorAll('[data-animated-copy]')
     if (lineElements.length) {
       lineElements.forEach((element) => {
         if (element.hasAttribute('data-split-initialized')) {

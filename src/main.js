@@ -12,12 +12,17 @@
   var transitionNormal = 0.875
   var transitionSlider = 1
   var isMobileScreen = window.matchMedia('(max-width: 767px)').matches
+  const desktopQuery = '(min-width: 992px)'
 
   function initCheckWindowHeight() {
     // https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
     let vh = window.innerHeight * 0.01
     document.documentElement.style.setProperty('--vh-in-px', `${vh}px`)
   }
+
+  window.addEventListener('resize', () => {
+    initCheckWindowHeight()
+  })
 
   // initPageTransitions()
   /*
@@ -530,7 +535,7 @@
   }
 
   const initButton = () => {
-    const offsetIncrement = 0.01 // Transition offset increment in seconds
+    const offsetIncrement = 0 // Transition offset increment in seconds
     const buttons = document.querySelectorAll('[data-button-animate-chars]')
 
     buttons.forEach((button) => {
@@ -539,7 +544,7 @@
       ;[...text].forEach((char, index) => {
         const span = document.createElement('span')
         span.textContent = char
-        span.style.transitionDelay = `${index * offsetIncrement}s`
+        // span.style.transitionDelay = `${index * offsetIncrement}s`
 
         // Handle spaces explicitly
         if (char === ' ') {
@@ -616,7 +621,33 @@
     )
   }
 
-  const initInitialLoader = (lenis) => {
+  const initInitialLoader = (lenis, skip = false) => {
+    if (skip) {
+      // set everything straight to end state
+      gsap.set('.loader_spinner', { opacity: 0 })
+      gsap.set('.loader_logo-svg', { y: '0%' })
+      gsap.set('#logo-1', { y: '100%' })
+      gsap.set('#logo-2', { y: '-100%' })
+      gsap.set('.loader_emblem-wrap.is-2', { scale: 1, color: 'black' })
+      gsap.set('.loader_emblem.is-filled', { scale: 1 })
+      gsap.set('.loader_emblem.is-path path', { drawSVG: '100%' })
+      gsap.set('.loader_block', {
+        clipPath: 'polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)',
+      })
+      gsap.set('.nav_logo-svg', { y: '0%' })
+      gsap.set('.nav_counter', { y: '0%' })
+      gsap.set('.nav_wrapper .button_text', { y: '0%' })
+      gsap.set('.nav_wrapper .button_bg', { opacity: 1, scale: 1 })
+
+      const loader = document.querySelector('.loader')
+      if (loader) loader.style.pointerEvents = 'none'
+      document.body.style.cursor = 'default'
+      lenis.start()
+
+      return // 🚀 stop here, no timeline
+    }
+
+    // --- normal timeline ---
     const tl = gsap.timeline({
       delay: 0.3,
       defaults: { ease: 'ease-transition', duration: 1 },
@@ -627,10 +658,8 @@
 
     tl.to('.loader_spinner', { opacity: 0, duration: 0.3 })
     tl.to('.loader_logo-svg', { y: '0%', delay: 0 })
-
     tl.to('#logo-1', { y: '100%', delay: 0.7 })
     tl.to('#logo-2', { y: '-100%' }, '<')
-
     tl.fromTo(
       '.loader_emblem-wrap.is-2',
       { scale: 1.1 },
@@ -642,8 +671,6 @@
       { color: 'black', duration: 0.1, delay: 0.9 },
       '<'
     )
-
-    // filled svg
     tl.fromTo(
       '.loader_emblem.is-filled',
       { scale: 1.1 },
@@ -663,23 +690,18 @@
         duration: 1.4,
         stagger: 0.1,
         delay: 0.75,
-        onStart: () => {
-          //gsap.to('.hero-img', { scale: 1, duration: 2, ease: 'ease-transition' })
-        },
         onComplete: () => {
           const loader = document.querySelector('.loader')
           if (loader) loader.style.pointerEvents = 'none'
           document.body.style.cursor = 'default'
-
           lenis.start()
         },
       },
       '<+1'
     )
 
-    tl.to('.nav_logo-svg', { y: '0%', delay: 0, duration: 1.5 }, '<+1')
+    tl.to('.nav_logo-svg', { y: '0%', duration: 1.5 }, '<+.5')
     tl.from('.nav_counter', { y: '100%', duration: 1.5 }, '<+=.1')
-
     tl.fromTo(
       '.nav_wrapper .button_text',
       { y: '100%' },
@@ -790,8 +812,8 @@
     }
   }
 
-  if (document.querySelector('.section-work-scroll')) {
-    $('.section-work-scroll').each(function (index) {
+  if (document.querySelector('.section_work-scroll')) {
+    $('.section_work-scroll').each(function (index) {
       let triggerElement = $(this)
       let slidesAmount = $(this).attr('data-slides-amount')
       let targetElement = $(this).find('.single-work-slide')
@@ -853,7 +875,7 @@
               singleSectionIndex
             )
             $('.current-slide-index-change').text(singleSectionIndex)
-            $('.section-work-scroll').css(
+            $('.section_work-scroll').css(
               '--current-slide-precentage',
               currentSlidePercentage
             )
@@ -914,8 +936,8 @@
 
   // Handle click on elements with data-link="about" and animate targets
   function initAboutLinkAnimation() {
-    const trigger = document.querySelector('[data-link="about"]')
-    if (!trigger) return
+    const triggers = document.querySelectorAll('[data-link="about"]')
+    if (!triggers.length) return
 
     const targets = []
     const aboutSection = document.querySelector('.section_about')
@@ -944,25 +966,361 @@
     })
 
     tl.to(targets, {
-      marginTop: '20rem',
+      marginTop: '45rem',
       duration: 1.6,
       ease: 'ease-primary',
-    })
+    }).to(
+      '.section_work-scroll',
+      {
+        y: '45rem',
+        duration: 1.6,
+        ease: 'ease-primary',
+      },
+      '<'
+    )
+    triggers.forEach((trigger) => {
+      trigger.addEventListener('click', (event) => {
+        if (trigger.tagName === 'A') event.preventDefault()
 
-    trigger.addEventListener('click', (event) => {
-      if (trigger.tagName === 'A') event.preventDefault()
-
-      if (tl.reversed()) {
-        tl.play()
-      } else {
-        tl.reverse()
-      }
+        if (tl.reversed()) {
+          tl.play()
+        } else {
+          tl.reverse()
+        }
+      })
     })
+  }
+
+  const initServices = () => {
+    const mm = gsap.matchMedia()
+    mm.add(desktopQuery, () => {
+      const items = [...document.querySelector('.services_list').children]
+      const totalItems = items.length
+
+      items.forEach((item, position) => {
+        const isLast = position === totalItems - 1
+
+        gsap
+          .timeline({
+            scrollTrigger: {
+              trigger: item,
+              start: 'bottom bottom',
+              end: '+=110%',
+              scrub: true,
+            },
+          })
+          .fromTo(
+            item,
+            { y: '0rem' },
+            {
+              ease: 'power2.in',
+              y: isLast ? '0rem' : '20rem',
+            },
+            0
+          )
+      })
+    })
+  }
+
+  const initReviewSlider = () => {
+    document
+      .querySelectorAll('.tab_wrap')
+      .forEach((tabWrap, componentIndex) => {
+        // Prevent double-init
+        if (tabWrap.dataset.scriptInitialized) return
+        tabWrap.dataset.scriptInitialized = 'true'
+
+        // Config from data-attributes
+        let loopControls =
+            tabWrap.getAttribute('data-loop-controls') === 'true',
+          slideTabs = tabWrap.getAttribute('data-slide-tabs') === 'true', // sliding vs fading animation
+          autoplay =
+            Number(tabWrap.getAttribute('data-autoplay-duration')) || 0,
+          duration = Number(tabWrap.getAttribute('data-duration')) || 0.3,
+          buttonList = tabWrap.querySelector('.tab_button_list'),
+          panelList = tabWrap.querySelector('.tab_content_list'),
+          previousButton = tabWrap.querySelector(
+            "[data-tab='previous'] button"
+          ),
+          nextButton = tabWrap.querySelector("[data-tab='next'] button"),
+          animating = false,
+          autoplayTl
+
+        // Helper: flatten Webflow CMS lists into static children
+        function removeCMSList(slot) {
+          const dynList = Array.from(slot.children).find((child) =>
+            child.classList.contains('w-dyn-list')
+          )
+          if (!dynList) return
+          const nestedItems = dynList?.firstElementChild?.children
+          if (!nestedItems) return
+          const staticWrapper = [...slot.children]
+          ;[...nestedItems].forEach(
+            (el) =>
+              el.firstElementChild && slot.appendChild(el.firstElementChild)
+          )
+          staticWrapper.forEach((el) => el.remove())
+        }
+        // removeCMSList(buttonList)
+        removeCMSList(panelList)
+
+        // let buttonItems = Array.from(buttonList.children)
+        let panelItems = Array.from(panelList.children)
+
+        // Safety check
+        if (
+          // !buttonList ||
+          !panelList ||
+          // !buttonItems.length ||
+          !panelItems.length
+        ) {
+          console.warn('Missing elements in:', tabWrap)
+          return
+        }
+
+        // Accessibility setup
+        panelItems.forEach((panel) => {
+          panel.style.display = 'none'
+          panel.setAttribute('role', 'tabpanel')
+        })
+        // buttonItems.forEach((button) => button.setAttribute('role', 'tab'))
+        panelList.removeAttribute('role')
+        // buttonList.setAttribute('role', 'tablist')
+
+        let activeIndex = 0
+
+        // Core function: switch active tab
+        const makeActive = (
+          index,
+          focus = false,
+          animate = true,
+          pause = true
+        ) => {
+          if (animating) return
+
+          const currentEl = document.querySelector('[data-tab-current-index]')
+          const totalEl = document.querySelector('[data-tab-total]')
+          if (currentEl) currentEl.textContent = index + 1 // 1-based index
+          if (totalEl) totalEl.textContent = panelItems.length
+
+          // Toggle active classes + aria attrs
+          // buttonItems.forEach((btn, i) => {
+          //   btn.classList.toggle('is-active', i === index)
+          //   btn.setAttribute('aria-selected', i === index ? 'true' : 'false')
+          //   btn.setAttribute('tabindex', i === index ? '0' : '-1')
+          // })
+          panelItems.forEach((panel, i) =>
+            panel.classList.toggle('is-active', i === index)
+          )
+
+          // Enable/disable nav buttons
+          if (nextButton)
+            nextButton.disabled =
+              index === panelItems.length - 1 && !loopControls
+          if (previousButton)
+            previousButton.disabled = index === 0 && !loopControls
+
+          if (focus) panelItems[index].focus()
+
+          const previousPanel = panelItems[activeIndex]
+          const currentPanel = panelItems[index]
+          let direction = activeIndex > index ? -1 : 1
+
+          // --- Animation logic ---
+          if (typeof gsap !== 'undefined' && animate && activeIndex !== index) {
+            // Reset autoplay if running
+            if (autoplayTl && typeof autoplayTl.restart === 'function') {
+              autoplayTl.restart()
+              if (pause) {
+                autoplayTl.progress(0)
+                autoplayTl.pause()
+                gsap.set(tabWrap, { '--progress': 1 })
+              }
+            }
+
+            animating = true
+            let tl = gsap.timeline({
+              onComplete: () => (animating = false),
+              defaults: { duration: duration, ease: 'power1.out' },
+            })
+
+            if (slideTabs) {
+              // Slide transition
+              tl.set(currentPanel, { display: 'block', position: 'relative' })
+              if (previousPanel)
+                tl.set(previousPanel, {
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                })
+              if (previousPanel)
+                tl.fromTo(
+                  previousPanel,
+                  { xPercent: 0 },
+                  { xPercent: -120 * direction }
+                )
+              tl.fromTo(
+                currentPanel,
+                { xPercent: 120 * direction },
+                { xPercent: 0 },
+                '<'
+              )
+              if (previousPanel) tl.set(previousPanel, { display: 'none' })
+
+              // 👉 Here you could inject extra transition code
+              // e.g. background fade, scale animation
+            } else {
+              // Fade transition
+              if (previousPanel) tl.to(previousPanel, { opacity: 0 })
+              if (previousPanel) tl.set(previousPanel, { display: 'none' })
+              tl.set(currentPanel, { display: 'block' })
+              tl.fromTo(currentPanel, { opacity: 0 }, { opacity: 1 })
+
+              // 👉 This is the spot to add custom fades or intro animations
+            }
+          } else {
+            // No animation fallback
+            if (previousPanel) previousPanel.style.display = 'none'
+            if (currentPanel) currentPanel.style.display = 'block'
+          }
+
+          // Scroll active button into view
+          panelList.scrollTo({
+            left: panelItems[index].offsetLeft,
+            behavior: 'smooth',
+          })
+          activeIndex = index
+        }
+
+        // Init with first tab
+        makeActive(0, false, false)
+
+        // Helper to move to next/prev tab
+        const updateIndex = (delta, focus = false, pause = true) =>
+          makeActive(
+            (activeIndex + delta + panelItems.length) % panelItems.length,
+            focus,
+            true,
+            pause
+          )
+
+        nextButton?.addEventListener('click', () => updateIndex(1))
+        previousButton?.addEventListener('click', () => updateIndex(-1))
+
+        // Setup ids + keyboard navigation
+        // buttonItems.forEach((btn, index) => {
+        //   let tabId = tabWrap.getAttribute('data-tab-component-id')
+        //   tabId = tabId
+        //     ? tabId.toLowerCase().replaceAll(' ', '-')
+        //     : componentIndex + 1
+        //   let itemId = btn.getAttribute('data-tab-item-id')
+        //   itemId = itemId
+        //     ? itemId.toLowerCase().replaceAll(' ', '-')
+        //     : index + 1
+
+        //   btn.setAttribute('id', 'tab-button-' + tabId + '-' + itemId)
+        //   btn.setAttribute('aria-controls', 'tab-panel-' + tabId + '-' + itemId)
+        //   panelItems[index].setAttribute(
+        //     'id',
+        //     'tab-panel-' + tabId + '-' + itemId
+        //   )
+        //   panelItems[index].setAttribute('aria-labelledby', btn.id)
+
+        //   // Deep linking via ?tab-id= param
+        //   if (
+        //     new URLSearchParams(location.search).get('tab-id') ===
+        //     tabId + '-' + itemId
+        //   ) {
+        //     makeActive(index)
+        //     autoplay = 0
+        //     tabWrap.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        //     history.replaceState(
+        //       {},
+        //       '',
+        //       ((u) => (u.searchParams.delete('tab-id'), u))(
+        //         new URL(location.href)
+        //       )
+        //     )
+        //   }
+
+        //   btn.addEventListener('click', () => makeActive(index))
+        //   btn.addEventListener('keydown', (e) => {
+        //     if (['ArrowRight', 'ArrowDown'].includes(e.key))
+        //       updateIndex(1, true)
+        //     else if (['ArrowLeft', 'ArrowUp'].includes(e.key))
+        //       updateIndex(-1, true)
+        //   })
+        // })
+
+        // Autoplay setup
+        if (autoplay !== 0 && typeof gsap !== 'undefined') {
+          autoplayTl = gsap.timeline({ repeat: -1 }).fromTo(
+            tabWrap,
+            { '--progress': 0 },
+            {
+              '--progress': 1,
+              ease: 'power2.inOut',
+              duration: autoplay,
+              onComplete: () => updateIndex(1, false, false),
+            }
+          )
+
+          // Pause autoplay on hover, focus, out of view, or prefers-reduced-motion
+          let isHovered = false,
+            hasFocusInside = false,
+            prefersReducedMotion = false,
+            inView = true
+          function updateAuto() {
+            if (prefersReducedMotion || !inView || isHovered || hasFocusInside)
+              autoplayTl.pause()
+            else autoplayTl.play()
+          }
+          function handleMotionChange(e) {
+            prefersReducedMotion = e.matches
+            updateAuto()
+          }
+          handleMotionChange(
+            window.matchMedia('(prefers-reduced-motion: reduce)')
+          )
+          window
+            .matchMedia('(prefers-reduced-motion: reduce)')
+            .addEventListener('change', handleMotionChange)
+
+          tabWrap.addEventListener('mouseenter', () => {
+            isHovered = true
+            updateAuto()
+          })
+          tabWrap.addEventListener('mouseleave', () => {
+            hasFocusInside = false
+            isHovered = false
+            updateAuto()
+          })
+          tabWrap.addEventListener('focusin', () => {
+            hasFocusInside = true
+            updateAuto()
+          })
+          tabWrap.addEventListener('focusout', (e) => {
+            if (!e.relatedTarget || !tabWrap.contains(e.relatedTarget)) {
+              hasFocusInside = false
+              updateAuto()
+            }
+          })
+
+          new IntersectionObserver(
+            (e) => {
+              inView = e[0].isIntersecting
+              updateAuto()
+            },
+            { threshold: 0 }
+          ).observe(tabWrap)
+        }
+      })
   }
 
   const initScript = () => {
     initLenis()
-    initInitialLoader(lenis)
+    initInitialLoader(lenis, false)
     initButton()
     initCheckWindowHeight()
     initParallax()
@@ -972,6 +1330,8 @@
     initScrollTriggerAnimations()
     initScrollProgressNumber()
     initAboutLinkAnimation()
+    initServices()
+    initReviewSlider()
   }
 
   initScript()

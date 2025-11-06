@@ -27,27 +27,6 @@
     return query.matches
   }
 
-  function hasCookie(name) {
-    return document.cookie.split('; ').some((row) => row.startsWith(name + '='))
-  }
-
-  function setCookie(name, value, days) {
-    const expires = new Date(Date.now() + days * 864e5).toUTCString()
-    document.cookie = `${name}=${value}; expires=${expires}; path=/`
-  }
-
-  // Example usage:
-  if (!hasCookie('ranHomeLoader')) {
-    // First visit → run your loader logic here
-    console.log('Running home loader for the first time...')
-
-    // Then set the cookie to prevent it from re-running for a week
-    setCookie('ranHomeLoader', 'true', 7)
-    ranHomeLoader = true
-  } else {
-    console.log('Home loader already ran this week')
-  }
-
   function initLenis(isHome = false) {
     if (Webflow.env('editor')) return
     lenis = new Lenis({
@@ -75,6 +54,29 @@
     requestAnimationFrame(raf)
   }
 
+  const setRanHomeLoader = () => {
+    const STORAGE_KEY = 'ranHomeLoader'
+    const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY))
+    const now = Date.now()
+
+    if (!stored || stored.expires < now || stored.value === 'false') {
+      console.log('Running home loader for the first time...')
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          value: 'true',
+          expires: now + WEEK_IN_MS,
+        })
+      )
+    } else {
+      console.log('Home loader already ran this week')
+      ranHomeLoader = true
+    }
+  }
+
+  setRanHomeLoader()
+
   //
   //
   // TRANSITIONS
@@ -98,71 +100,12 @@
       name = next.getAttribute('data-barba-namespace')
     }
 
-    const tl = gsap.timeline({
-      defaults: { ease: 'ease-transition', duration: 1 },
-    })
     // nav elements
-    const logo1 = document.querySelector('.nav_logo-svg.is-1')
-    const logo2 = document.querySelector('.nav_logo-svg.is-2')
+    const navLogo1 = document.querySelector('.nav_logo-svg.is-1')
+    const navLogo2 = document.querySelector('.nav_logo-svg.is-2')
 
     const navLogo = document.querySelectorAll('.nav_logo-svg')
-    const navCounter = document.querySelector('.nav_counter')
-    const navButtonText = document.querySelectorAll('.nav_wrapper .button_text')
-    const navButtonBg = document.querySelectorAll('.nav_wrapper .button_bg')
 
-    gsap.set(logo1, { y: '-120%' })
-    gsap.set(logo2, { y: '120%' })
-
-    gsap.fromTo(
-      pageOverlay,
-      { opacity: 1 },
-      { opacity: 0, duration: 1.2, ease: 'expo.inOut' }
-    )
-
-    if (name === 'home' && !ranHomeLoader) {
-      console.log('home transition in')
-      initHomeLoader()
-    } else {
-      gsap.fromTo(
-        next,
-        { y: '-10vh' },
-        { y: '0vh', duration: 1, ease: 'expo.inOut' }
-      )
-      gsap.fromTo(
-        loadBlock,
-        {
-          scaleY: 1,
-        },
-        {
-          scaleY: 0,
-          duration: 1,
-          ease: 'ease-transition',
-          stagger: 0.1,
-          onComplete: () => {
-            gsap.set(loadWrap, { display: 'none' })
-            document.body.style.cursor = 'default'
-          },
-        }
-      )
-
-      tl.to(navLogo, { y: '0%', duration: 1.5 })
-      tl.from(navCounter, { y: '100%', duration: 1.5 }, '<+=.1')
-      tl.fromTo(
-        navButtonText,
-        { y: '100%' },
-        { y: '0%', duration: 1.5, stagger: 0.1 },
-        '<+=.1'
-      )
-      tl.fromTo(
-        navButtonBg,
-        { opacity: 0, scale: 0.8 },
-        { opacity: 1, scale: 1, stagger: 0.1, duration: 2 },
-        '<+=.1'
-      )
-    }
-  }
-
-  const initHomeLoader = () => {
     const spinner = document.querySelector('.loader_spinner')
     const logoSvg = document.querySelectorAll('.loader_logo-svg')
     const logo1 = document.querySelector('#logo-1')
@@ -176,8 +119,7 @@
       '.loader_emblem.is-path path'
     )
     const loadBlock = document.querySelectorAll('.load-block')
-    // nav elements
-    const navLogo = document.querySelectorAll('.nav_logo-svg')
+
     const navCounter = document.querySelector('.nav_counter')
     const navButtonText = document.querySelectorAll('.nav_wrapper .button_text')
     const navButtonBg = document.querySelectorAll('.nav_wrapper .button_bg')
@@ -188,23 +130,16 @@
       defaults: { ease: 'ease-transition', duration: 1 },
     })
 
-    if (ranHomeLoader) {
-      // set everything straight to end state
-      gsap.set(spinner, { opacity: 0 })
-      gsap.set(spinner, { opacity: 0 })
-      gsap.set(logoSvg, { y: '0%' })
-      gsap.set(logo1, { y: '100%' })
-      gsap.set(logo2, { y: '-100%' })
-      gsap.set(loaderEmblemWrap2, { scale: 1, color: 'black' })
-      gsap.set(loaderEmblemFill, { scale: 1 })
-      gsap.set(loaderEmblemPath, { drawSVG: '100%' })
-      gsap.set(loadBlock, { scaleY: 0 })
-      gsap.set(navLogo, { y: '0%' })
-      gsap.set(navCounter, { y: '0%' })
-      gsap.set(navButtonText, { y: '0%' })
-      gsap.set(navButtonBg, { opacity: 1, scale: 1 })
-    } else {
-      // animate
+    gsap.set(navLogo1, { y: '-120%' })
+    gsap.set(navLogo2, { y: '120%' })
+
+    gsap.fromTo(
+      pageOverlay,
+      { opacity: 1 },
+      { opacity: 0, duration: 1.2, ease: 'expo.inOut' }
+    )
+
+    if (name === 'home' && !ranHomeLoader) {
       lenis.stop()
       document.querySelector('body').style.cursor = 'wait'
       gsap.set(loaderEmblemWrap2, { color: '#fdffdd' })
@@ -256,22 +191,59 @@
         },
         '<+1'
       )
-    }
 
-    tl.to(navLogo, { y: '0%', duration: 1.5 }, '<+.5')
-    tl.from(navCounter, { y: '100%', duration: 1.5 }, '<+=.1')
-    tl.fromTo(
-      navButtonText,
-      { y: '100%' },
-      { y: '0%', duration: 1.5, stagger: 0.1 },
-      '<+=.1'
-    )
-    tl.fromTo(
-      navButtonBg,
-      { opacity: 0, scale: 0.8 },
-      { opacity: 1, scale: 1, stagger: 0.1, duration: 2 },
-      '<+=.1'
-    )
+      tl.to(navLogo, { y: '0%', duration: 1.5 }, '<+.5')
+      tl.from(navCounter, { y: '100%', duration: 1.5 }, '<+=.1')
+      tl.fromTo(
+        navButtonText,
+        { y: '100%' },
+        { y: '0%', duration: 1.5, stagger: 0.1 },
+        '<+=.1'
+      )
+      tl.fromTo(
+        navButtonBg,
+        { opacity: 0, scale: 0.8 },
+        { opacity: 1, scale: 1, stagger: 0.1, duration: 2 },
+        '<+=.1'
+      )
+    } else {
+      gsap.fromTo(
+        next,
+        { y: '-10vh' },
+        { y: '0vh', duration: 1, ease: 'expo.inOut' }
+      )
+      gsap.fromTo(
+        loadBlock,
+        {
+          scaleY: 1,
+        },
+        {
+          scaleY: 0,
+          duration: 1,
+          ease: 'ease-transition',
+          stagger: 0.1,
+          onComplete: () => {
+            gsap.set(loadWrap, { display: 'none' })
+            document.body.style.cursor = 'default'
+          },
+        }
+      )
+
+      tl.to(navLogo, { y: '0%', duration: 1.5 })
+      tl.from(navCounter, { y: '100%', duration: 1.5 }, '<+=.1')
+      tl.fromTo(
+        navButtonText,
+        { y: '100%' },
+        { y: '0%', duration: 1.5, stagger: 0.1 },
+        '<+=.1'
+      )
+      tl.fromTo(
+        navButtonBg,
+        { opacity: 0, scale: 0.8 },
+        { opacity: 1, scale: 1, stagger: 0.1, duration: 2 },
+        '<+=.1'
+      )
+    }
   }
 
   function initCheckWindowHeight() {
@@ -339,7 +311,7 @@
   }
 
   const initButton = () => {
-    const offsetIncrement = 0 // Transition offset increment in seconds
+    const offsetIncrement = 0.01 // Transition offset increment in seconds
     const buttons = document.querySelectorAll('[data-button-animate-chars]')
 
     buttons.forEach((button) => {
@@ -348,7 +320,7 @@
       ;[...text].forEach((char, index) => {
         const span = document.createElement('span')
         span.textContent = char
-        // span.style.transitionDelay = `${index * offsetIncrement}s`
+        span.style.transitionDelay = `${index * offsetIncrement}s`
 
         // Handle spaces explicitly
         if (char === ' ') {
@@ -519,110 +491,115 @@
       })
     }
   }
+  const initHomeClientStack = (container) => {
+    container = document.querySelector('body')
+    if (!container) return
+    if (document.querySelector('.section_work-scroll')) {
+      $('.section_work-scroll').each(function (index) {
+        let triggerElement = $(this)
+        let slidesAmount = $(this).attr('data-slides-amount')
+        let targetElement = $(this).find('.single-work-slide')
+        let targetThumbList = $(this).find('.thumbnail-list')
 
-  if (document.querySelector('.section_work-scroll')) {
-    $('.section_work-scroll').each(function (index) {
-      let triggerElement = $(this)
-      let slidesAmount = $(this).attr('data-slides-amount')
-      let targetElement = $(this).find('.single-work-slide')
-      let targetThumbList = $(this).find('.thumbnail-list')
+        let tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: triggerElement,
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: 0,
+          },
+        })
 
-      let tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: triggerElement,
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: 0,
-        },
+        tl.fromTo(
+          targetThumbList,
+          {
+            yPercent: 0,
+          },
+          {
+            yPercent: ((slidesAmount - 1) / slidesAmount) * -100,
+            ease: 'none',
+          }
+        )
       })
 
-      tl.fromTo(
-        targetThumbList,
-        {
-          yPercent: 0,
-        },
-        {
-          yPercent: ((slidesAmount - 1) / slidesAmount) * -100,
-          ease: 'none',
-        }
-      )
-    })
+      // Check the index of section in view
+      function checkIndexSection() {
+        var indexSections = document.querySelectorAll(
+          '[data-work-height-index]'
+        )
+        var indexSectionsCount = $('[data-slides-amount]').attr(
+          'data-slides-amount'
+        )
 
-    // Check the index of section in view
-    function checkIndexSection() {
-      var indexSections = document.querySelectorAll('[data-work-height-index]')
-      var indexSectionsCount = $('[data-slides-amount]').attr(
-        'data-slides-amount'
-      )
+        for (var i = 0; i < indexSections.length; i++) {
+          var indexSection = indexSections[i]
+          var indexSectionTop = indexSection.getBoundingClientRect().top
+          var indexSectionBottom = indexSection.getBoundingClientRect().bottom
+          var indexObserverOffset = window.innerHeight / 2
 
-      for (var i = 0; i < indexSections.length; i++) {
-        var indexSection = indexSections[i]
-        var indexSectionTop = indexSection.getBoundingClientRect().top
-        var indexSectionBottom = indexSection.getBoundingClientRect().bottom
-        var indexObserverOffset = window.innerHeight / 2
-
-        if (
-          indexSectionTop <= indexObserverOffset &&
-          indexSectionBottom >= indexObserverOffset
-        ) {
-          var singleSectionIndex = $(indexSection).attr(
-            'data-work-height-index'
-          )
-          var currentSlide = parseInt(singleSectionIndex)
           if (
-            $('[data-slide-index-active]').attr('data-slide-index-active') ==
-            singleSectionIndex
+            indexSectionTop <= indexObserverOffset &&
+            indexSectionBottom >= indexObserverOffset
           ) {
-            // do nothing
-          } else {
-            var currentSlidePercentage =
-              ((currentSlide - 1) / indexSectionsCount) * -100 + '%'
-            $('[data-slide-index-active]').attr(
-              'data-slide-index-active',
+            var singleSectionIndex = $(indexSection).attr(
+              'data-work-height-index'
+            )
+            var currentSlide = parseInt(singleSectionIndex)
+            if (
+              $('[data-slide-index-active]').attr('data-slide-index-active') ==
               singleSectionIndex
-            )
-            $('.current-slide-index-change').text(singleSectionIndex)
-            $('.section_work-scroll').css(
-              '--current-slide-precentage',
-              currentSlidePercentage
-            )
-            $('[data-slide-item-index]').attr(
-              'data-slide-item-status',
-              'not-active'
-            )
-            // $('[data-slide-item-index="' + (parseInt(singleSectionIndex)) +  '"]').prevAll().attr('data-slide-item-status', 'transition-out');
+            ) {
+              // do nothing
+            } else {
+              var currentSlidePercentage =
+                ((currentSlide - 1) / indexSectionsCount) * -100 + '%'
+              $('[data-slide-index-active]').attr(
+                'data-slide-index-active',
+                singleSectionIndex
+              )
+              $('.current-slide-index-change').text(singleSectionIndex)
+              $('.section_work-scroll').css(
+                '--current-slide-precentage',
+                currentSlidePercentage
+              )
+              $('[data-slide-item-index]').attr(
+                'data-slide-item-status',
+                'not-active'
+              )
+              // $('[data-slide-item-index="' + (parseInt(singleSectionIndex)) +  '"]').prevAll().attr('data-slide-item-status', 'transition-out');
+              $(
+                '[data-slide-item-index="' + parseInt(singleSectionIndex) + '"]'
+              ).attr('data-slide-item-status', 'active')
+              // $('[data-slide-item-index="' + (parseInt(singleSectionIndex)) +  '"]').nextAll().attr('data-slide-item-status', 'transition-in');
+            }
             $(
-              '[data-slide-item-index="' + parseInt(singleSectionIndex) + '"]'
-            ).attr('data-slide-item-status', 'active')
-            // $('[data-slide-item-index="' + (parseInt(singleSectionIndex)) +  '"]').nextAll().attr('data-slide-item-status', 'transition-in');
+              '[data-thumb-video-status][data-slide-item-index="' +
+                parseInt(singleSectionIndex) +
+                '"]'
+            )
+              .attr('data-thumb-video-status', 'active')
+              .find('video')
+              .trigger('play')
+            $(
+              '[data-thumb-video-status][data-slide-item-index="' +
+                parseInt(singleSectionIndex) +
+                '"]'
+            )
+              .siblings()
+              .attr('data-thumb-video-status', 'not-active')
+              .find('video')
+              .trigger('pause')
           }
-          $(
-            '[data-thumb-video-status][data-slide-item-index="' +
-              parseInt(singleSectionIndex) +
-              '"]'
-          )
-            .attr('data-thumb-video-status', 'active')
-            .find('video')
-            .trigger('play')
-          $(
-            '[data-thumb-video-status][data-slide-item-index="' +
-              parseInt(singleSectionIndex) +
-              '"]'
-          )
-            .siblings()
-            .attr('data-thumb-video-status', 'not-active')
-            .find('video')
-            .trigger('pause')
         }
       }
-    }
 
-    // Check when scrolling
-    document.addEventListener('scroll', function () {
+      // Check when scrolling
+      document.addEventListener('scroll', function () {
+        checkIndexSection()
+      })
+
       checkIndexSection()
-    })
-
-    checkIndexSection()
+    }
   }
 
   /** Nav scroll progress */
@@ -1389,6 +1366,7 @@
     initHomeHero(next)
     // initServices(next)
     initReviewSlider(next)
+    initHomeClientStack(next)
     initHomeServicesStack(next)
   }
 

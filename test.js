@@ -1,129 +1,130 @@
-function initTabSystem() {
-  const wrappers = document.querySelectorAll('[data-tabs="wrapper"]')
+// on Weglot init
+Weglot.on('initialized', () => {
+  // get the current active language
+  const currentLang = Weglot.getCurrentLang()
+  setTimeout(() => {
+    updateHubspot(currentLang)
+  }, 1000)
+  // call updateDropdownLinks function
+  updateSW5DropdownLinks(currentLang)
+})
 
-  wrappers.forEach((wrapper) => {
-    const contentItems = wrapper.querySelectorAll('[data-tabs="content-item"]')
-    const visualItems = wrapper.querySelectorAll('[data-tabs="visual-item"]')
-    const animateVisuals = visualItems.length > 1 // if only 1 (or 0), keep visuals static
-    if (!animateVisuals && visualItems[0]) {
-      visualItems[0].classList.add('active')
-    }
-
-    const autoplay = wrapper.dataset.tabsAutoplay === 'true'
-    const autoplayDuration =
-      parseInt(wrapper.dataset.tabsAutoplayDuration) || 5000
-
-    let activeContent = null // keep track of active item/link
-    let activeVisual = animateVisuals ? null : visualItems[0] || null
-    let isAnimating = false
-    let progressBarTween = null // to stop/start the progress bar
-
-    function startProgressBar(index) {
-      if (progressBarTween) progressBarTween.kill()
-      const bar = contentItems[index].querySelector(
-        '[data-tabs="item-progress"]'
-      )
-      if (!bar) return
-
-      // In this function, you can basically do anything you want, that should happen as a tab is active
-      // Maybe you have a circle filling, some other element growing, you name it.
-      gsap.set(bar, { scaleX: 0, transformOrigin: 'left center' })
-      progressBarTween = gsap.to(bar, {
-        scaleX: 1,
-        duration: autoplayDuration / 1000,
-        ease: 'power1.inOut',
-        onComplete: () => {
-          if (!isAnimating) {
-            const nextIndex = (index + 1) % contentItems.length
-            switchTab(nextIndex) // once bar is full, set next to active – this is important
-          }
-        },
-      })
-    }
-
-    function switchTab(index) {
-      if (isAnimating || contentItems[index] === activeContent) return
-
-      isAnimating = true
-      if (progressBarTween) progressBarTween.kill() // Stop any running progress bar here
-
-      const outgoingContent = activeContent
-      const outgoingVisual = animateVisuals ? activeVisual : null
-      const outgoingBar = outgoingContent?.querySelector(
-        '[data-tabs="item-progress"]'
-      )
-
-      const incomingContent = contentItems[index]
-      const incomingVisual = animateVisuals ? visualItems[index] : visualItems[0]
-      const incomingBar = incomingContent.querySelector(
-        '[data-tabs="item-progress"]'
-      )
-
-      outgoingContent?.classList.remove('active')
-      if (animateVisuals) outgoingVisual?.classList.remove('active')
-      incomingContent.classList.add('active')
-      if (animateVisuals) incomingVisual?.classList.add('active')
-
-      const tl = gsap.timeline({
-        defaults: { duration: 0.65, ease: 'power3' },
-        onComplete: () => {
-          activeContent = incomingContent
-          if (animateVisuals) activeVisual = incomingVisual
-          isAnimating = false
-          if (autoplay) startProgressBar(index) // Start autoplay bar here
-        },
-      })
-
-      // Wrap 'outgoing' in a check to prevent warnings on first run of the function
-      // Of course, during first run (on page load), there's no 'outgoing' tab yet!
-      if (outgoingContent) {
-        outgoingContent.classList.remove('active')
-        if (animateVisuals) outgoingVisual?.classList.remove('active')
-        tl.set(outgoingBar, { transformOrigin: 'right center' })
-          .to(outgoingBar, { scaleX: 0, duration: 0.3 }, 0)
-        if (animateVisuals)
-          tl.to(outgoingVisual, { autoAlpha: 0, xPercent: 3 }, 0)
-        tl.to(
-          outgoingContent.querySelector('[data-tabs="item-details"]'),
-          { height: 0 },
-          0
-        )
-      }
-
-      incomingContent.classList.add('active')
-      if (animateVisuals) incomingVisual?.classList.add('active')
-      if (animateVisuals)
-        tl.fromTo(
-          incomingVisual,
-          { autoAlpha: 0, xPercent: 3 },
-          { autoAlpha: 1, xPercent: 0 },
-          0.3
-        )
-      tl.fromTo(
-          incomingContent.querySelector('[data-tabs="item-details"]'),
-          { height: 0 },
-          { height: 'auto' },
-          0
-        )
-        .set(incomingBar, { scaleX: 0, transformOrigin: 'left center' }, 0)
-    }
-
-    // on page load, set first to active
-    // idea: you could wrap this in a scrollTrigger
-    // so it will only start once a user reaches this section
-    switchTab(0)
-
-    // switch tabs on click
-    contentItems.forEach((item, i) =>
-      item.addEventListener('click', () => {
-        if (item === activeContent) return // ignore click if current one is already active
-        switchTab(i)
-      })
-    )
+// for each of the .wg-element-wrapper language links
+document.querySelectorAll('.wg-element-wrapper.sw5 [lang]').forEach((link) => {
+  // add a click event listener
+  link.addEventListener('click', function (e) {
+    e.preventDefault()
+    Weglot.switchTo(this.getAttribute('lang'))
+    updateSW5DropdownLinks(this.getAttribute('lang'))
   })
+})
+
+function updateHubspot(lang) {
+  if (document.getElementById('form-brochure')) {
+    let embedDestinations = [...document.querySelectorAll('#form-brochure')]
+
+    embedDestinations.forEach((destination) => {
+      while (destination.firstChild) {
+        destination.removeChild(destination.firstChild)
+      }
+      var hubspotEmbed = document.createElement('script')
+      if (lang === 'nl') {
+        hubspotEmbed.textContent = nlBrochure
+      } else if (lang === 'en') {
+        hubspotEmbed.textContent = enBrochure
+      } else if (lang === 'fr') {
+        hubspotEmbed.textContent = frBrochure
+      } else {
+        console.log('fout')
+      }
+      destination.appendChild(hubspotEmbed)
+    })
+  }
+
+  if (document.getElementById('offerte')) {
+    let embedDestinations = [...document.querySelectorAll('#offerte')]
+
+    embedDestinations.forEach((destination) => {
+      while (destination.firstChild) {
+        destination.removeChild(destination.firstChild)
+      }
+      var hubspotEmbed = document.createElement('script')
+      if (lang === 'nl') {
+        hubspotEmbed.textContent = nlOfferte
+      } else if (lang === 'en') {
+        hubspotEmbed.textContent = enOfferte
+      } else if (lang === 'fr') {
+        hubspotEmbed.textContent = frOfferte
+      } else {
+        console.log('fout')
+      }
+      destination.appendChild(hubspotEmbed)
+    })
+  }
+
+  if (document.getElementById('form-contact')) {
+    let embedDestinations = [...document.querySelectorAll('#form-contact')]
+
+    embedDestinations.forEach((destination) => {
+      while (destination.firstChild) {
+        destination.removeChild(destination.firstChild)
+      }
+      var hubspotEmbed = document.createElement('script')
+      if (lang === 'nl') {
+        hubspotEmbed.textContent = nlContact
+      } else if (lang === 'en') {
+        hubspotEmbed.textContent = enContact
+      } else if (lang === 'fr') {
+        hubspotEmbed.textContent = frContact
+      } else {
+        console.log('fout')
+      }
+      destination.appendChild(hubspotEmbed)
+    })
+  }
+
+  if (document.getElementById('form-newsletter')) {
+    let embedDestinations = [...document.querySelectorAll('#form-newsletter')]
+
+    embedDestinations.forEach((destination) => {
+      while (destination.firstChild) {
+        destination.removeChild(destination.firstChild)
+      }
+      var hubspotEmbed = document.createElement('script')
+
+      hubspotEmbed.textContent = nlSubscribe
+      destination.appendChild(hubspotEmbed)
+    })
+  }
 }
 
-// Initialize Tab System with Autoplay Option
-document.addEventListener('DOMContentLoaded', () => {
-  initTabSystem()
+// updateDropdownLinks function
+function updateSW5DropdownLinks(currentLang) {
+  // get the wrapper element
+  const $wrapper = document.querySelector('.wg-element-wrapper.sw5')
+  // if the .w-dropdown-toggle is not the current active language
+  if (
+    $wrapper.querySelector('.w-dropdown-toggle').getAttribute('lang') !==
+    currentLang
+  ) {
+    // get the current active language link
+    const $activeLangLink = $wrapper.querySelector('[lang=' + currentLang + ']')
+    // swap the dropdown toggle's text with the current active language link text
+    const $toggle = $activeLangLink
+      .closest('.wg-element-wrapper')
+      .querySelector('.w-dropdown-toggle')
+    const toggleTxt = $toggle.textContent
+    const activeLangLinkTxt = $activeLangLink.textContent
+    $toggle.querySelector('div').textContent = activeLangLinkTxt
+    $activeLangLink.textContent = toggleTxt
+    // swap the dropdown toggle's lang attr with the current active language link lang attr
+    const lang = $activeLangLink.getAttribute('lang')
+    const toggleLang = $toggle.getAttribute('lang')
+    $toggle.setAttribute('lang', lang)
+    $activeLangLink.setAttribute('lang', toggleLang)
+  }
+}
+
+Weglot.on('languageChanged', function (newLang) {
+  updateHubspot(newLang)
 })

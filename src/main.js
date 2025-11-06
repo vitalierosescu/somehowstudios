@@ -14,6 +14,266 @@
   var isMobileScreen = window.matchMedia('(max-width: 767px)').matches
   const desktopQuery = '(min-width: 992px)'
 
+  const loadWrap = document.querySelector('.load-w')
+  const pageOverlay = document.querySelector('.page-overlay')
+  const loadBg = loadWrap?.querySelector('.load-bg')
+  const loadBlock = loadWrap?.querySelectorAll('.load-block')
+  const navW = document.querySelector('.nav-w')
+
+  let ranHomeLoader = false
+
+  function prefersReducedMotion() {
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)')
+    return query.matches
+  }
+
+  function hasCookie(name) {
+    return document.cookie.split('; ').some((row) => row.startsWith(name + '='))
+  }
+
+  function setCookie(name, value, days) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString()
+    document.cookie = `${name}=${value}; expires=${expires}; path=/`
+  }
+
+  // Example usage:
+  if (!hasCookie('ranHomeLoader')) {
+    // First visit → run your loader logic here
+    console.log('Running home loader for the first time...')
+
+    // Then set the cookie to prevent it from re-running for a week
+    setCookie('ranHomeLoader', 'true', 7)
+    ranHomeLoader = true
+  } else {
+    console.log('Home loader already ran this week')
+  }
+
+  function initLenis(isHome = false) {
+    if (Webflow.env('editor')) return
+    lenis = new Lenis({
+      duration: 0.8,
+      // infinite: isHome ? true : false,
+      // syncTouch: true,
+    })
+
+    function raf(time) {
+      lenis.raf(time)
+      requestAnimationFrame(raf)
+    }
+
+    lenis.scrollTo(0, {
+      offset: 0,
+      duration: 0.2,
+      force: true,
+      onComplete: () => {
+        // lenis.stop()
+      },
+    })
+
+    // lenis.scrollTo(0, 0)
+
+    requestAnimationFrame(raf)
+  }
+
+  //
+  //
+  // TRANSITIONS
+  function transitionOut(current) {
+    document.body.style.cursor = 'wait'
+    gsap.set(loadWrap, { display: 'flex' })
+    gsap.set(loadBlock, { transformOrigin: '50% 100%' })
+    gsap.to(current, { y: '-10vh', duration: 1.2, ease: 'expo.inOut' })
+    gsap.fromTo(
+      pageOverlay,
+      { opacity: 0 },
+      { opacity: 1, duration: 1.2, ease: 'expo.inOut' }
+    )
+  }
+
+  function transitionIn(next, name) {
+    if (!next) {
+      next = document.querySelector('[data-barba="container"]')
+    }
+    if (!name) {
+      name = next.getAttribute('data-barba-namespace')
+    }
+
+    const tl = gsap.timeline({
+      defaults: { ease: 'ease-transition', duration: 1 },
+    })
+    // nav elements
+    const logo1 = document.querySelector('.nav_logo-svg.is-1')
+    const logo2 = document.querySelector('.nav_logo-svg.is-2')
+
+    const navLogo = document.querySelectorAll('.nav_logo-svg')
+    const navCounter = document.querySelector('.nav_counter')
+    const navButtonText = document.querySelectorAll('.nav_wrapper .button_text')
+    const navButtonBg = document.querySelectorAll('.nav_wrapper .button_bg')
+
+    gsap.set(logo1, { y: '-120%' })
+    gsap.set(logo2, { y: '120%' })
+
+    gsap.fromTo(
+      pageOverlay,
+      { opacity: 1 },
+      { opacity: 0, duration: 1.2, ease: 'expo.inOut' }
+    )
+
+    if (name === 'home' && !ranHomeLoader) {
+      console.log('home transition in')
+      initHomeLoader()
+    } else {
+      gsap.fromTo(
+        next,
+        { y: '-10vh' },
+        { y: '0vh', duration: 1, ease: 'expo.inOut' }
+      )
+      gsap.fromTo(
+        loadBlock,
+        {
+          scaleY: 1,
+        },
+        {
+          scaleY: 0,
+          duration: 1,
+          ease: 'ease-transition',
+          stagger: 0.1,
+          onComplete: () => {
+            gsap.set(loadWrap, { display: 'none' })
+            document.body.style.cursor = 'default'
+          },
+        }
+      )
+
+      tl.to(navLogo, { y: '0%', duration: 1.5 })
+      tl.from(navCounter, { y: '100%', duration: 1.5 }, '<+=.1')
+      tl.fromTo(
+        navButtonText,
+        { y: '100%' },
+        { y: '0%', duration: 1.5, stagger: 0.1 },
+        '<+=.1'
+      )
+      tl.fromTo(
+        navButtonBg,
+        { opacity: 0, scale: 0.8 },
+        { opacity: 1, scale: 1, stagger: 0.1, duration: 2 },
+        '<+=.1'
+      )
+    }
+  }
+
+  const initHomeLoader = () => {
+    const spinner = document.querySelector('.loader_spinner')
+    const logoSvg = document.querySelectorAll('.loader_logo-svg')
+    const logo1 = document.querySelector('#logo-1')
+    const logo2 = document.querySelector('#logo-2')
+    const loaderEmblemContainer = document.querySelector(
+      '.loader_emblem-container'
+    )
+    const loaderEmblemWrap2 = document.querySelector('.loader_emblem-wrap.is-2')
+    const loaderEmblemFill = document.querySelector('.loader_emblem.is-filled')
+    const loaderEmblemPath = document.querySelector(
+      '.loader_emblem.is-path path'
+    )
+    const loadBlock = document.querySelectorAll('.load-block')
+    // nav elements
+    const navLogo = document.querySelectorAll('.nav_logo-svg')
+    const navCounter = document.querySelector('.nav_counter')
+    const navButtonText = document.querySelectorAll('.nav_wrapper .button_text')
+    const navButtonBg = document.querySelectorAll('.nav_wrapper .button_bg')
+    const homeHeroLoader = document.querySelector('.home--hero_loader')
+
+    const tl = gsap.timeline({
+      delay: 0.3,
+      defaults: { ease: 'ease-transition', duration: 1 },
+    })
+
+    if (ranHomeLoader) {
+      // set everything straight to end state
+      gsap.set(spinner, { opacity: 0 })
+      gsap.set(spinner, { opacity: 0 })
+      gsap.set(logoSvg, { y: '0%' })
+      gsap.set(logo1, { y: '100%' })
+      gsap.set(logo2, { y: '-100%' })
+      gsap.set(loaderEmblemWrap2, { scale: 1, color: 'black' })
+      gsap.set(loaderEmblemFill, { scale: 1 })
+      gsap.set(loaderEmblemPath, { drawSVG: '100%' })
+      gsap.set(loadBlock, { scaleY: 0 })
+      gsap.set(navLogo, { y: '0%' })
+      gsap.set(navCounter, { y: '0%' })
+      gsap.set(navButtonText, { y: '0%' })
+      gsap.set(navButtonBg, { opacity: 1, scale: 1 })
+    } else {
+      // animate
+      lenis.stop()
+      document.querySelector('body').style.cursor = 'wait'
+      gsap.set(loaderEmblemWrap2, { color: '#fdffdd' })
+      gsap.set(loaderEmblemContainer, { display: 'flex' })
+      gsap.set(homeHeroLoader, { display: 'none' })
+
+      tl.to(spinner, { opacity: 0, duration: 0.3 })
+      tl.to(logoSvg, { y: '0%', delay: 0 })
+      tl.to(logo1, { y: '110%', delay: 0.7 })
+      tl.to(logo2, { y: '-110%' }, '<')
+      tl.fromTo(
+        loaderEmblemWrap2,
+        { scale: 1.1 },
+        { scale: 1, duration: 1.5 },
+        '<'
+      )
+      tl.to(
+        loaderEmblemWrap2,
+        { color: 'black', duration: 0.1, delay: 0.9 },
+        '<'
+      )
+      tl.fromTo(
+        loaderEmblemFill,
+        { scale: 1.1 },
+        { scale: 1, duration: 1.7 },
+        '<-.9'
+      )
+      tl.from(
+        loaderEmblemPath,
+        { drawSVG: 0, ease: 'power2.inOut', duration: 5, delay: 0.4 },
+        0
+      )
+      tl.to(
+        loadBlock,
+        {
+          scaleY: 0,
+          duration: 1.4,
+          stagger: 0.1,
+          delay: 0.75,
+          onComplete: () => {
+            const loader = document.querySelector('.load-w')
+            if (loader) loader.style.pointerEvents = 'none'
+            loader.style.display = 'none'
+            document.body.style.cursor = 'default'
+            homeHeroLoader.style.display = 'flex'
+            loaderEmblemContainer.style.display = 'none'
+            lenis.start()
+          },
+        },
+        '<+1'
+      )
+    }
+
+    tl.to(navLogo, { y: '0%', duration: 1.5 }, '<+.5')
+    tl.from(navCounter, { y: '100%', duration: 1.5 }, '<+=.1')
+    tl.fromTo(
+      navButtonText,
+      { y: '100%' },
+      { y: '0%', duration: 1.5, stagger: 0.1 },
+      '<+=.1'
+    )
+    tl.fromTo(
+      navButtonBg,
+      { opacity: 0, scale: 0.8 },
+      { opacity: 1, scale: 1, stagger: 0.1, duration: 2 },
+      '<+=.1'
+    )
+  }
+
   function initCheckWindowHeight() {
     // https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
     let vh = window.innerHeight * 0.01
@@ -24,444 +284,7 @@
     initCheckWindowHeight()
   })
 
-  // initPageTransitions()
-  /*
-  function pageTransitionIn() {
-    const tl = gsap.timeline()
-    tl.set(
-      '.transition_screen',
-      {
-        autoAlpha: 0,
-      },
-      0
-    )
-    tl.to(
-      '.transition_screen',
-      {
-        autoAlpha: 1,
-        ease: 'ease-secondary',
-        duration: 0.35,
-      },
-      0
-    )
-    return tl
-  }
-  function pageTransitionOut() {
-    // document.body.removeAttribute('data-lenis-prevent')
-    // document.body.classList.remove('overflow-hidden')
-    const textAnimationTransition = document.querySelectorAll(
-      '[data-split-animation][data-lines-split]'
-    )
-    if (textAnimationTransition.length) {
-      textAnimationTransition.forEach((element) => {
-        const tl = gsap.timeline()
-        const parentSplit = element.parentSplit
-        const childSplit = element.childSplit
-        if (!parentSplit || !childSplit) return
-        tl.fromTo(
-          childSplit.lines,
-          {
-            yPercent: 120,
-            rotate: 0.001,
-            ease: 'ease-secondary',
-            duration: transitionSlider,
-            stagger: 0.0825,
-          },
-          {
-            yPercent: 0,
-            rotate: 0,
-            ease: 'ease-secondary',
-          }
-        )
-      })
-    }
-    if (document.querySelector('[data-image-transition-anim]')) {
-      const coverContainers = document.querySelectorAll(
-        '[data-image-transition-anim]'
-      )
-      coverContainers.forEach((coverContainer) => {
-        const cover = coverContainer.querySelector('[data-image-cover]')
-        const image = coverContainer.querySelector('[data-image]')
-        if (cover && image) {
-          gsap.set(image, { scale: 1.1 })
-          const animate = () => {
-            const tl = gsap.timeline()
-            tl.to(
-              image,
-              {
-                scale: 1,
-                duration: 1.2,
-                ease: 'ease-secondary',
-              },
-              0
-            ).to(
-              cover,
-              {
-                autoAlpha: 0,
-                duration: 0.6,
-              },
-              0
-            )
-          }
-          if (image.complete) {
-            animate()
-          } else {
-            image.onload = animate
-          }
-        }
-      })
-    }
-    if (document.querySelector('.navbar_wrap')) {
-      const tl = gsap.timeline()
-      gsap.defaults({
-        ease: 'ease-secondary',
-        duration: transitionSlider,
-      })
-      tl.from(
-        '.navbar_home',
-        {
-          yPercent: 120,
-          rotate: 0.001,
-        },
-        0.1
-      )
-        .from(
-          '.navbar_links_li',
-          {
-            yPercent: 200,
-            rotate: 0.001,
-            stagger: 0.0625,
-          },
-          '-=0.9'
-        )
-        .from(
-          '.navbar_cta_contain',
-          {
-            yPercent: 120,
-            rotate: 0.001,
-          },
-          '-=1'
-        )
-        .from(
-          '.navbar_menu_text',
-          {
-            yPercent: 120,
-            rotate: 0.001,
-          },
-          '-=0.9'
-        )
-    }
-    if (document.querySelector('.hero_image_contain')) {
-      const tl = gsap.timeline()
-      gsap.set('.hero_image_contain', {
-        scale: 1.1,
-        filter: 'blur(5px)',
-      })
-      tl.to(
-        '.hero_image_contain',
-        {
-          scale: 1,
-          filter: 'blur(0px)',
-          duration: 1.8,
-          ease: 'ease-secondary',
-        },
-        '<'
-      )
-    }
-    if (document.querySelector('.hero_collection_details')) {
-      const tl = gsap.timeline()
-      tl.from('.hero_collection_details > *', {
-        yPercent: 200,
-        rotate: 0.001,
-        ease: 'ease-secondary',
-        duration: transitionSlider,
-        stagger: 0.125,
-      })
-    }
-    if (document.querySelector('.gallery_tooltip_wrap')) {
-      const tl = gsap.timeline()
-      tl.from(
-        '.gallery_tooltip_wrap',
-        {
-          yPercent: 150,
-          rotate: 0.001,
-          ease: 'ease-secondary',
-          duration: 1.2,
-        },
-        0.8
-      )
-    }
-    if (document.querySelector('.gallery_item')) {
-      const tl = gsap.timeline()
-      tl.from(
-        '.gallery_item',
-        {
-          filter: 'blur(5px)',
-          scale: 0.9,
-          rotate: 0.001,
-          stagger: {
-            amount: 0.155,
-            from: 'center',
-          },
-          ease: 'ease-secondary',
-          duration: 1.2,
-        },
-        '<'
-      )
-    }
-    if (document.querySelector('.hero_works_wrap')) {
-      const filterWrap = document.querySelector('.works_filter_wrap')
-      const filterLinks = filterWrap.querySelectorAll('.g_link')
-      const tl = gsap.timeline()
-      if (isMobileScreen) {
-        tl.from('.works_bottom_content, .works_bottom_scroll', {
-          yPercent: 120,
-          rotate: 0.001,
-          stagger: 0.175,
-          ease: 'ease-secondary',
-          duration: transitionSlider,
-        }).from(
-          filterLinks,
-          {
-            yPercent: 120,
-            rotate: 0.001,
-            stagger: 0.035,
-            ease: 'ease-secondary',
-            duration: transitionSlider,
-          },
-          '-=0.8'
-        )
-      } else {
-        gsap.set('[data-clip-container]', {
-          clipPath: 'polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%)',
-          overwrite: 'auto',
-        })
-        tl.to(
-          '[data-clip-container]',
-          {
-            clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)',
-            ease: 'ease-secondary',
-            duration: 1.2,
-          },
-          0.1
-        )
-          .from(
-            '.works_bottom_content, .works_bottom_scroll',
-            {
-              yPercent: 120,
-              rotate: 0.001,
-              stagger: 0.175,
-              ease: 'ease-secondary',
-              duration: transitionSlider,
-            },
-            '-=0.9'
-          )
-          .from(
-            filterLinks,
-            {
-              yPercent: 120,
-              rotate: 0.001,
-              stagger: 0.035,
-              ease: 'ease-secondary',
-              duration: transitionSlider,
-            },
-            '-=0.9'
-          )
-      }
-    }
-    const studioSvg = document.querySelector('.hero_studio_svg')
-    if (studioSvg) {
-      const tl = gsap.timeline()
-      tl.from('.hero_studio_path', {
-        yPercent: 120,
-        stagger: {
-          amount: 0.225,
-          from: 'end',
-        },
-        ease: 'ease-secondary',
-        duration: 1.6,
-      })
-    }
-    if (document.querySelector('.hero_project_wrap')) {
-      const tl = gsap.timeline()
-      gsap.set('.hero_project_thumbnail', {
-        scale: 1.05,
-      })
-      tl.to(
-        '.hero_project_thumbnail',
-        {
-          scale: 1,
-          duration: 1.8,
-          ease: 'ease-secondary',
-        },
-        '<'
-      ).from(
-        '[data-details-animation]',
-        {
-          yPercent: 200,
-          rotate: 0.001,
-          stagger: 0.0825,
-          ease: 'ease-secondary',
-          duration: transitionSlider,
-        },
-        '-=1.5'
-      )
-    }
-    if (document.querySelector('.terms_wrap')) {
-      const tl = gsap.timeline()
-      tl.from(
-        '.terms_rich_text',
-        {
-          autoAlpha: 0,
-          y: 50,
-          ease: 'ease-secondary',
-          duration: transitionSlider,
-        },
-        0.5
-      )
-    }
-    if (document.querySelector('.precedent_item_wrap')) {
-      const tl = gsap.timeline()
-      tl.from('.precedent_item_wrap', {
-        yPercent: 120,
-        stagger: 0.0825,
-        ease: 'ease-secondary',
-        duration: transitionSlider,
-      })
-    }
-  }
-    
-  function initPageTransitions() {
-    async function commonLeaveBefore(data) {
-      const body = document.body
-      const isMenuOpen = body.dataset.navigationStatus === 'is-open'
-      if (isMenuOpen) {
-        body.dataset.navigationStatus = 'is-closed'
-        //animateMenuClose()
-      }
-      document
-        .querySelectorAll('[data-navigation-status]')
-        .forEach((el) => el.setAttribute('data-navigation-status', 'is-closed'))
-      pageTransitionIn(data.current)
-    }
-    async function commonLeaveAfter(data) {
-      killAllScrollTriggers()
-      data.current.container.remove()
-      cleanupSplitTexts()
-    }
-    async function commonBeforeEnter(data) {
-      ScrollTrigger.getAll().forEach((t) => t.kill())
-      initResetWebflow(data)
-      initSmoothScroll(data.next.container)
-      initScript()
-    }
-    async function commonEnter(data) {
-      gsap.to('.transition_screen', {
-        autoAlpha: 0,
-        ease: 'ease-secondary',
-        duration: transitionNormal,
-      })
-      pageTransitionOut(data.next)
-    }
-    barba.hooks.after((data) => {
-      ScrollTrigger.refresh()
-    })
-    barba.init({
-      sync: true,
-      preventRunning: true,
-      timeout: 7000,
-      transitions: [
-        {
-          name: 'default',
-          async leave(data) {
-            await commonLeaveBefore(data)
-            await delay(transitionOffset)
-            await commonLeaveAfter(data)
-          },
-          async beforeEnter(data) {
-            await commonBeforeEnter(data)
-          },
-          async enter(data) {
-            await commonEnter(data)
-          },
-          once(data) {
-            initSmoothScroll(data.next.container)
-            // initLoader()
-            initScript()
-          },
-        },
-      ],
-      views: [
-        {
-          namespace: 'gallery',
-          afterEnter() {
-            // initGalleryPage()
-            var vids = document.querySelectorAll('video')
-            vids.forEach((vid) => {
-              var playPromise = vid.play()
-              if (playPromise !== undefined) {
-                playPromise.then((_) => {}).catch((error) => {})
-              }
-            })
-          },
-        },
-        {
-          namespace: 'home',
-          afterEnter() {
-            // initHomePage()
-            console.log('home')
-          },
-        },
-        {
-          namespace: 'process',
-          afterEnter() {
-            // initProcessPage()
-          },
-        },
-        {
-          namespace: 'project-detail',
-          afterEnter() {
-            //initProjectDetailPage()
-          },
-        },
-        {
-          namespace: 'studio',
-          afterEnter() {
-            //initStudioPage()
-          },
-        },
-        {
-          namespace: 'works',
-          afterEnter() {
-            // if (worksPageCleanup) {
-            //   worksPageCleanup()
-            //   worksPageCleanup = null
-            // }
-            // worksPageCleanup = initWorksPage()
-          },
-        },
-        {
-          namespace: 'precedent-detail',
-          afterEnter() {
-            //initPrecedentPages()
-          },
-        },
-      ],
-    })
-    function initSmoothScroll() {
-      initLenis()
-      ScrollTrigger.refresh()
-    }
-    function killAllScrollTriggers() {
-      if (typeof ScrollTrigger !== 'undefined') {
-        ScrollTrigger.killAll()
-      }
-    }
-    history.scrollRestoration = 'manual'
-  }
-    */
-
-  function initResetWebflow(data) {
+  function resetWebflow(data) {
     let parser = new DOMParser()
     let dom = parser.parseFromString(data.next.html, 'text/html')
     let webflowPageId = $(dom).find('html').attr('data-wf-page')
@@ -489,6 +312,14 @@
     })
   }
 
+  function debounce(func, wait) {
+    let timeout
+    return function (...args) {
+      clearTimeout(timeout)
+      timeout = setTimeout(() => func.apply(this, args), wait)
+    }
+  }
+
   var activeSplitTexts = []
 
   function cleanupSplitTexts() {
@@ -505,33 +336,6 @@
     //   worksPageCleanup()
     //   worksPageCleanup = null
     // }
-  }
-
-  function initLenis() {
-    if (Webflow.env('editor')) return
-    lenis = new Lenis({
-      duration: 0.8,
-      infinite: true,
-      syncTouch: true,
-    })
-
-    function raf(time) {
-      lenis.raf(time)
-      requestAnimationFrame(raf)
-    }
-
-    lenis.scrollTo(0, {
-      offset: 0,
-      duration: 0.2,
-      force: true,
-      onComplete: () => {
-        lenis.stop()
-      },
-    })
-
-    // lenis.scrollTo(0, 0)
-
-    requestAnimationFrame(raf)
   }
 
   const initButton = () => {
@@ -621,101 +425,6 @@
     )
   }
 
-  const initInitialLoader = (lenis, skip = false) => {
-    if (skip) {
-      // set everything straight to end state
-      gsap.set('.loader_spinner', { opacity: 0 })
-      gsap.set('.loader_logo-svg', { y: '0%' })
-      gsap.set('#logo-1', { y: '100%' })
-      gsap.set('#logo-2', { y: '-100%' })
-      gsap.set('.loader_emblem-wrap.is-2', { scale: 1, color: 'black' })
-      gsap.set('.loader_emblem.is-filled', { scale: 1 })
-      gsap.set('.loader_emblem.is-path path', { drawSVG: '100%' })
-      gsap.set('.loader_block', {
-        clipPath: 'polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)',
-      })
-      gsap.set('.nav_logo-svg', { y: '0%' })
-      gsap.set('.nav_counter', { y: '0%' })
-      gsap.set('.nav_wrapper .button_text', { y: '0%' })
-      gsap.set('.nav_wrapper .button_bg', { opacity: 1, scale: 1 })
-
-      const loader = document.querySelector('.loader')
-      if (loader) loader.style.pointerEvents = 'none'
-      document.body.style.cursor = 'default'
-      lenis.start()
-
-      return // 🚀 stop here, no timeline
-    }
-
-    // --- normal timeline ---
-    const tl = gsap.timeline({
-      delay: 0.3,
-      defaults: { ease: 'ease-transition', duration: 1 },
-    })
-    document.body.style.cursor = 'wait'
-
-    gsap.set('.loader_emblem-wrap.is-2', { color: '#fdffdd' })
-
-    tl.to('.loader_spinner', { opacity: 0, duration: 0.3 })
-    tl.to('.loader_logo-svg', { y: '0%', delay: 0 })
-    tl.to('#logo-1', { y: '100%', delay: 0.7 })
-    tl.to('#logo-2', { y: '-100%' }, '<')
-    tl.fromTo(
-      '.loader_emblem-wrap.is-2',
-      { scale: 1.1 },
-      { scale: 1, duration: 1.5 },
-      '<'
-    )
-    tl.to(
-      '.loader_emblem-wrap.is-2',
-      { color: 'black', duration: 0.1, delay: 0.9 },
-      '<'
-    )
-    tl.fromTo(
-      '.loader_emblem.is-filled',
-      { scale: 1.1 },
-      { scale: 1, duration: 1.7 },
-      '<-.9'
-    )
-    tl.from(
-      '.loader_emblem.is-path path',
-      { drawSVG: 0, ease: 'power2.inOut', duration: 5, delay: 0.4 },
-      0
-    )
-
-    tl.to(
-      '.loader_block',
-      {
-        clipPath: 'polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)',
-        duration: 1.4,
-        stagger: 0.1,
-        delay: 0.75,
-        onComplete: () => {
-          const loader = document.querySelector('.loader')
-          if (loader) loader.style.pointerEvents = 'none'
-          document.body.style.cursor = 'default'
-          lenis.start()
-        },
-      },
-      '<+1'
-    )
-
-    tl.to('.nav_logo-svg', { y: '0%', duration: 1.5 }, '<+.5')
-    tl.from('.nav_counter', { y: '100%', duration: 1.5 }, '<+=.1')
-    tl.fromTo(
-      '.nav_wrapper .button_text',
-      { y: '100%' },
-      { y: '0%', duration: 1.5, stagger: 0.1 },
-      '<+=.1'
-    )
-    tl.fromTo(
-      '.nav_wrapper .button_bg',
-      { opacity: 0, scale: 0.8 },
-      { opacity: 1, scale: 1, stagger: 0.1, duration: 2 },
-      '<+=.1'
-    )
-  }
-
   const initNavMobile = () => {
     // Toggle Navigation
     document
@@ -728,10 +437,10 @@
             navStatusEl.getAttribute('data-navigation-status') === 'not-active'
           ) {
             navStatusEl.setAttribute('data-navigation-status', 'active')
-            // If you use Lenis you can 'stop' Lenis here: Example Lenis.stop();
+            // If you use Lenis you can 'stop' Lenis here
           } else {
             navStatusEl.setAttribute('data-navigation-status', 'not-active')
-            // If you use Lenis you can 'start' Lenis here: Example Lenis.start();
+            // If you use Lenis you can 'start' Lenis here
           }
         })
       })
@@ -755,7 +464,7 @@
         if (!navStatusEl) return
         if (navStatusEl.getAttribute('data-navigation-status') === 'active') {
           navStatusEl.setAttribute('data-navigation-status', 'not-active')
-          // If you use Lenis you can 'start' Lenis here: Example Lenis.start();
+          // If you use Lenis you can 'start' Lenis here
         }
       }
     })
@@ -793,7 +502,6 @@
       lineAnimElements.forEach((element) => {
         const parentSplit = element.parentSplit
         const childSplit = element.childSplit
-        console.log(childSplit)
         if (!parentSplit || !childSplit) return
         // Animate from initial offset; ensure "from" state renders immediately
         gsap.from(childSplit.lines, {
@@ -824,7 +532,6 @@
           trigger: triggerElement,
           start: 'top top',
           end: 'bottom bottom',
-          markers: true,
           scrub: 0,
         },
       })
@@ -935,14 +642,14 @@
   }
 
   // Handle click on elements with data-link="about" and animate targets
-  function initAboutLinkAnimation() {
+  function initAboutLinkAnimation(container) {
     const triggers = document.querySelectorAll('[data-link="about"]')
     if (!triggers.length) return
 
     const targets = []
     const aboutSection = document.querySelector('.section_about')
     const mainWrapper = document.querySelector('.main-wrapper')
-    const loader = document.querySelector('.loader_container')
+    const loader = document.querySelector('.load-w')
     loader.style.zIndex = 0
     const navigation = document.querySelector('.navigation')
     targets.push(navigation)
@@ -981,6 +688,7 @@
     triggers.forEach((trigger) => {
       trigger.addEventListener('click', (event) => {
         if (trigger.tagName === 'A') event.preventDefault()
+        aboutSection.classList.add('is--active')
 
         if (tl.reversed()) {
           tl.play()
@@ -1318,21 +1026,485 @@
       })
   }
 
-  const initScript = () => {
-    initLenis()
-    initInitialLoader(lenis, false)
+  function initDirectionalListHover(container) {
+    container = document.querySelector('body')
+    if (!container) return
+    const directionMap = {
+      top: 'translateY(-100%)',
+      bottom: 'translateY(100%)',
+      left: 'translateX(-100%)',
+      right: 'translateX(100%)',
+    }
+
+    document
+      .querySelectorAll('[data-directional-hover]')
+      .forEach((container) => {
+        const type = container.getAttribute('data-type') || 'all'
+
+        container
+          .querySelectorAll('[data-directional-hover-item]')
+          .forEach((item) => {
+            const tile = item.querySelector('[data-directional-hover-tile]')
+            if (!tile) return
+
+            item.addEventListener('mouseenter', (e) => {
+              const dir = getDirection(e, item, type)
+              tile.style.transition = 'none'
+              tile.style.transform = directionMap[dir] || 'translate(0, 0)'
+              void tile.offsetHeight
+              tile.style.transition = ''
+              tile.style.transform = 'translate(0%, 0%)'
+              item.setAttribute('data-status', `enter-${dir}`)
+            })
+
+            item.addEventListener('mouseleave', (e) => {
+              const dir = getDirection(e, item, type)
+              item.setAttribute('data-status', `leave-${dir}`)
+              tile.style.transform = directionMap[dir] || 'translate(0, 0)'
+            })
+          })
+
+        function getDirection(event, el, type) {
+          const { left, top, width: w, height: h } = el.getBoundingClientRect()
+          const x = event.clientX - left
+          const y = event.clientY - top
+
+          if (type === 'y') return y < h / 2 ? 'top' : 'bottom'
+          if (type === 'x') return x < w / 2 ? 'left' : 'right'
+
+          const distances = {
+            top: y,
+            right: w - x,
+            bottom: h - y,
+            left: x,
+          }
+
+          return Object.entries(distances).reduce((a, b) =>
+            a[1] < b[1] ? a : b
+          )[0]
+        }
+      })
+  }
+
+  const projectsSlider = (next) => {
+    if (!next) {
+      next = document.querySelector('[data-barba="container"]')
+    }
+    next
+      .querySelectorAll('.slider_wrap:not(.w-condition-invisible)')
+      .forEach((wrap) => {
+        if (wrap.dataset.scriptInitialized) return
+        wrap.dataset.scriptInitialized = 'true'
+
+        const cmsWrap = wrap.querySelector('.slider_cms_wrap')
+
+        if (!cmsWrap) {
+          console.warn('Missing required elements for Swiper in:', wrap)
+          return
+        }
+
+        const swiper = new Swiper(cmsWrap, {
+          slidesPerView: 'auto',
+          followFinger: true,
+          freeMode: false,
+          slideToClickedSlide: false,
+          centeredSlides: false,
+          autoHeight: false,
+          speed: 600,
+          mousewheel: {
+            forceToAxis: true,
+          },
+          loop: true,
+          keyboard: {
+            enabled: true,
+            onlyInViewport: true,
+          },
+          autoplay: {
+            delay: 3500,
+          },
+          navigation: {
+            nextEl: wrap.querySelector('.slider_btn_element.is-next'),
+            prevEl: wrap.querySelector('.slider_btn_element.is-prev'),
+          },
+          pagination: {
+            el: wrap.querySelector('.slider_bullet_wrap'),
+            bulletActiveClass: 'is-active',
+            bulletClass: 'slider_bullet_item',
+            bulletElement: 'button',
+            clickable: true,
+          },
+          scrollbar: {
+            el: wrap.querySelector('.slider_draggable_wrap'),
+            draggable: true,
+            dragClass: 'slider_draggable_handle',
+            snapOnRelease: true,
+          },
+          slideActiveClass: 'is-active',
+          slideDuplicateActiveClass: 'is-active',
+        })
+      })
+  }
+
+  const initForm = () => {
+    document.querySelectorAll('.form_input').forEach((field) => {
+      const label = field
+        .closest('.form-field-group')
+        ?.querySelector('.form_label')
+      const isTextarea = field
+        .closest('.form-field-group')
+        ?.querySelector('.form_input.is-text-area')
+
+      // On focus in
+      field.addEventListener('focusin', () => {
+        if (label) label.classList.remove('is-large')
+        if (isTextarea) field.classList.add('is-active')
+      })
+
+      // On focus out
+      field.addEventListener('focusout', () => {
+        const isEmpty = field.value.trim().length === 0
+        if (isEmpty && label) label.classList.add('is-large')
+        if (isTextarea && isEmpty) field.classList.remove('is-active')
+      })
+
+      // On load
+      if (field.value.trim().length > 0) {
+        if (label) label.classList.remove('is-large')
+        if (isTextarea) field.classList.add('is-active')
+      }
+    })
+  }
+
+  function initBasicFormValidation() {
+    const forms = document.querySelectorAll('[data-form-validate]')
+
+    forms.forEach((form) => {
+      const fields = form.querySelectorAll(
+        '[data-validate] input, [data-validate] textarea'
+      )
+      const submitButtonDiv = form.querySelector('[data-submit]') // The div wrapping the submit button
+      const submitInput = submitButtonDiv.querySelector('input[type="submit"]') // The actual submit button
+
+      // Capture the form load time
+      const formLoadTime = new Date().getTime() // Timestamp when the form was loaded
+
+      // Function to validate individual fields (input or textarea)
+      const validateField = (field) => {
+        const parent = field.closest('[data-validate]') // Get the parent div
+        const minLength = field.getAttribute('min')
+        const maxLength = field.getAttribute('max')
+        const type = field.getAttribute('type')
+        let isValid = true
+
+        // Check if the field has content
+        if (field.value.trim() !== '') {
+          parent.classList.add('is--filled')
+        } else {
+          parent.classList.remove('is--filled')
+        }
+
+        // Validation logic for min and max length
+        if (minLength && field.value.length < minLength) {
+          isValid = false
+        }
+
+        if (maxLength && field.value.length > maxLength) {
+          isValid = false
+        }
+
+        // Validation logic for email input type
+        if (type === 'email' && !/\S+@\S+\.\S+/.test(field.value)) {
+          isValid = false
+        }
+
+        // Add or remove success/error classes on the parent div
+        if (isValid) {
+          parent.classList.remove('is--error')
+          parent.classList.add('is--success')
+        } else {
+          parent.classList.remove('is--success')
+          parent.classList.add('is--error')
+        }
+
+        return isValid
+      }
+
+      // Function to start live validation for a field
+      const startLiveValidation = (field) => {
+        field.addEventListener('input', function () {
+          validateField(field)
+        })
+      }
+
+      // Function to validate and start live validation for all fields, focusing on the first field with an error
+      const validateAndStartLiveValidationForAll = () => {
+        let allValid = true
+        let firstInvalidField = null
+
+        fields.forEach((field) => {
+          const valid = validateField(field)
+          if (!valid && !firstInvalidField) {
+            firstInvalidField = field // Track the first invalid field
+          }
+          if (!valid) {
+            allValid = false
+          }
+          startLiveValidation(field) // Start live validation for all fields
+        })
+
+        // If there is an invalid field, focus on the first one
+        if (firstInvalidField) {
+          firstInvalidField.focus()
+        }
+
+        return allValid
+      }
+
+      // Anti-spam: Check if form was filled too quickly
+      const isSpam = () => {
+        const currentTime = new Date().getTime()
+        const timeDifference = (currentTime - formLoadTime) / 1000 // Convert milliseconds to seconds
+        return timeDifference < 5 // Return true if form is filled within 5 seconds
+      }
+
+      // Handle clicking the custom submit button
+      submitButtonDiv.addEventListener('click', function () {
+        // Validate the form first
+        if (validateAndStartLiveValidationForAll()) {
+          // Only check for spam after all fields are valid
+          if (isSpam()) {
+            alert('Form submitted too quickly. Please try again.')
+            return // Stop form submission
+          }
+          submitInput.click() // Simulate a click on the <input type="submit">
+        }
+      })
+
+      // Handle pressing the "Enter" key
+      form.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') {
+          event.preventDefault() // Prevent the default form submission
+
+          // Validate the form first
+          if (validateAndStartLiveValidationForAll()) {
+            // Only check for spam after all fields are valid
+            if (isSpam()) {
+              alert('Form submitted too quickly. Please try again.')
+              return // Stop form submission
+            }
+            submitInput.click() // Trigger our custom form submission
+          }
+        }
+      })
+    })
+  }
+
+  function initHomeServicesStack(container) {
+    let onResize, dc
+
+    const ctx = gsap.context(() => {
+      const panels = Array.from(container.querySelectorAll('.service_card'))
+      if (panels.length < 3) return
+
+      const getOffset = () => parseFloat(gsap.getProperty(panels[1], 'top'))
+      const contrib = panels.map(() => ({}))
+
+      function sum(obj) {
+        let s = 0
+        for (const k in obj) s += obj[k]
+        return s
+      }
+      function applyFor(idx) {
+        const y = -getOffset() * sum(contrib[idx])
+        gsap.set(panels[idx], { y })
+      }
+
+      panels.forEach((panel, i) => {
+        if (i < 2) return
+        const a = i - 1
+        const b = i - 2
+
+        ScrollTrigger.create({
+          trigger: panel,
+          start: () => `top ${getOffset() * 2}px`,
+          end: () => `+=${getOffset()}px`,
+          scrub: true,
+          onUpdate: (self) => {
+            contrib[a][i] = self.progress
+            contrib[b][i] = self.progress
+            applyFor(a)
+            applyFor(b)
+          },
+          onRefresh: () => {
+            applyFor(a)
+            applyFor(b)
+          },
+        })
+      })
+
+      const refresh = () => {
+        if (typeof lenis?.resize === 'function') lenis.resize()
+        ScrollTrigger.refresh()
+      }
+
+      dc = gsap.delayedCall(0.8, refresh)
+
+      let lastW = window.innerWidth
+      onResize = debounce(() => {
+        const w = window.innerWidth
+        if (w === lastW) return
+        lastW = w
+        refresh()
+      }, 200)
+
+      window.addEventListener('resize', onResize)
+    }, container)
+
+    return () => {
+      window.removeEventListener('resize', onResize)
+      if (dc) dc.kill()
+      ctx.revert()
+    }
+  }
+
+  /**
+   *
+   * INITS
+   *
+   */
+  const initGlobal = (container) => {
     initButton()
+    initLenis()
     initCheckWindowHeight()
     initParallax()
-    initHomeHero()
     initNavMobile()
     initSplitText()
     initScrollTriggerAnimations()
     initScrollProgressNumber()
-    initAboutLinkAnimation()
-    initServices()
-    initReviewSlider()
+    // initAboutLinkAnimation(container)
   }
 
-  initScript()
+  const initHomePage = (next) => {
+    initLenis(true)
+    initHomeHero(next)
+    // initServices(next)
+    initReviewSlider(next)
+    initHomeServicesStack(next)
+  }
+
+  const initProjectsDetailPage = (next) => {
+    projectsSlider(next)
+  }
+
+  const initProjectsPage = (next) => {
+    initDirectionalListHover(next)
+  }
+
+  const initContactPage = (next) => {
+    initForm()
+    initBasicFormValidation()
+  }
+
+  barba.hooks.after((data) => {
+    $(data.next.container).removeClass('fixed')
+    $('.is--transitioning').removeClass('is--transitioning')
+    resetWebflow(data)
+    ScrollTrigger.refresh()
+    lenis.scrollTo(0, {
+      immediate: true,
+      force: true,
+      lock: true,
+      onComplete: () => {
+        lenis.start()
+      },
+    })
+  })
+
+  barba.hooks.leave((data) => {
+    lenis.stop()
+  })
+
+  barba.hooks.enter((data) => {
+    $(data.next.container).addClass('fixed')
+  })
+
+  barba.init({
+    debug: true,
+    preventRunning: true,
+    prevent: function ({ el }) {
+      return el.hasAttribute('data-barba-prevent')
+    },
+    transitions: [
+      {
+        name: 'default',
+        sync: true,
+        leave(data) {
+          let current = data.current.container
+
+          transitionOut(current)
+          return gsap.fromTo(
+            loadBlock,
+            { scaleY: 0 },
+            {
+              scaleY: 1,
+              duration: 1.4,
+              stagger: 0.1,
+              ease: 'ease-transition',
+            }
+          )
+        },
+      },
+    ],
+    views: [
+      {
+        namespace: 'home',
+        afterEnter(data) {
+          let next = data.next.container
+          initGlobal(next)
+          initHomePage(next)
+          transitionIn(next)
+          //
+        },
+      },
+      {
+        namespace: 'projects',
+        afterEnter(data) {
+          let next = data.next.container
+          transitionIn(next)
+          initGlobal(next)
+          //
+          initProjectsPage(next)
+        },
+      },
+      {
+        namespace: 'project-detail',
+        afterEnter(data) {
+          let next = data.next.container
+          transitionIn(next)
+          initGlobal(next)
+          //
+          initProjectsDetailPage(next)
+        },
+      },
+      {
+        namespace: 'contact',
+        afterEnter(data) {
+          let next = data.next.container
+          transitionIn(next)
+          initGlobal(next)
+
+          initContactPage()
+        },
+      },
+
+      {
+        namespace: 'default',
+        afterEnter(data) {
+          let next = data.next.container
+          transitionIn(next)
+          initGlobal(next)
+        },
+      },
+    ],
+  })
 })()

@@ -322,7 +322,6 @@
         span.textContent = char
         span.style.transitionDelay = `${index * offsetIncrement}s`
 
-        // Handle spaces explicitly
         if (char === ' ') {
           span.style.whiteSpace = 'pre' // Preserve space width
         }
@@ -619,32 +618,44 @@
   }
 
   // Handle click on elements with data-link="about" and animate targets
-  function initAboutLinkAnimation(container) {
+  function initAboutLinkAnimation(next) {
     const triggers = document.querySelectorAll('[data-link="about"]')
     if (!triggers.length) return
+    if (!next) {
+      next = document.querySelector('[data-barba="container"]')
+    }
 
     const targets = []
+
+    let namespace = next.getAttribute('data-barba-namespace')
+    console.log('Namespace:', namespace)
     const aboutSection = document.querySelector('.section_about')
-    const mainWrapper = document.querySelector('.main-wrapper')
     const loader = document.querySelector('.load-w')
-    loader.style.zIndex = 0
     const navigation = document.querySelector('.navigation')
+    let mainWrapper
+
+    if (namespace === 'home') {
+      mainWrapper = next.querySelector('.main-wrapper')
+    } else {
+      mainWrapper = next
+
+      console.log('Main Wrapper:', mainWrapper)
+    }
+
     targets.push(navigation)
     targets.push(loader)
     targets.push(mainWrapper)
 
-    if (!aboutSection || !mainWrapper) return
+    if (!aboutSection) return
 
     // build timeline
     const tl = gsap.timeline({
       paused: true,
       reversed: true,
       onStart: () => {
-        // starting to play forward -> stop scroll
         lenis.stop()
       },
       onReverseComplete: () => {
-        // finished reversing -> resume scroll
         lenis.start()
       },
     })
@@ -1074,6 +1085,9 @@
         wrap.dataset.scriptInitialized = 'true'
 
         const cmsWrap = wrap.querySelector('.slider_cms_wrap')
+        wrap
+          .querySelectorAll('.slider_cms_item.w-condition-invisible')
+          .forEach((el) => el.remove())
 
         if (!cmsWrap) {
           console.warn('Missing required elements for Swiper in:', wrap)
@@ -1344,6 +1358,15 @@
     }
   }
 
+  const initPlayVideos = (container) => {
+    const videos = container.querySelectorAll('video')
+    videos.forEach((video) => {
+      video.play().catch((error) => {
+        console.warn('Video play was prevented:', error)
+      })
+    })
+  }
+
   /**
    *
    * INITS
@@ -1358,7 +1381,8 @@
     initSplitText()
     initScrollTriggerAnimations()
     initScrollProgressNumber()
-    // initAboutLinkAnimation(container)
+    initAboutLinkAnimation(container)
+    initPlayVideos(container)
   }
 
   const initHomePage = (next) => {
@@ -1415,7 +1439,7 @@
     transitions: [
       {
         name: 'default',
-        sync: true,
+        //sync: true,
         leave(data) {
           let current = data.current.container
 
@@ -1441,7 +1465,6 @@
           initGlobal(next)
           initHomePage(next)
           transitionIn(next)
-          //
         },
       },
       {
@@ -1474,7 +1497,13 @@
           initContactPage()
         },
       },
-
+      // {
+      //   namespace: 'about',
+      //   afterEnter(data) {
+      //     let next = data.next.container
+      //     initGlobal(next)
+      //   },
+      // },
       {
         namespace: 'default',
         afterEnter(data) {

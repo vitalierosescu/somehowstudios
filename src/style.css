@@ -1,0 +1,34 @@
+/* Font sizing */
+html {
+  font-size: 16px;
+}
+
+@media (min-width: 240px) and (max-width: 479px) {
+  html {
+    font-size: calc(8px + 8 * ((100vw - 240px) / 239));
+  }
+}
+
+@media (min-width: 480px) and (max-width: 767px) {
+  html {
+    font-size: calc(12px + 4 * ((100vw - 480px) / 287));
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  html {
+    font-size: calc(10.67px + 5.33 * ((100vw - 768px) / 223));
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1439px) {
+  html {
+    font-size: min(calc(10.67px + 5.33 * ((100vw - 992px) / 447)), 14px);
+  }
+}
+
+@media (min-width: 1440px) {
+  html {
+    font-size: 16px;
+  }
+}

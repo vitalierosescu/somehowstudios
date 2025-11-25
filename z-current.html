@@ -1,0 +1,272 @@
+<!-- =========================================
+     FOOTER SCRIPTS CHEAT SHEET  —  DO NOT REMOVE
+     Order matters. Each module is isolated.
+
+     0  Bootstrap
+     1  Motion gating
+     2  Context helpers
+     3  Lenis initialisation
+     4  Page restore and orientation handling
+     5  IX2 LOAD RELIABILITY SHIM (global — helps collection pages)
+     6  Anchor links via Lenis
+========================================= -->
+
+<!-- 0) Bootstrap -->
+<script>
+  // Sets up Webflow queue and exits in Designer
+  // Creates FS_boot so later modules can run safely
+  window.Webflow = window.Webflow || []
+  window.Webflow.push(function () {
+    if (document.documentElement.classList.contains('w-editor')) return
+    window.FS_boot = true
+  })
+</script>
+
+<!-- 1) Motion gating -->
+<script>
+  // Enables or disables animation based on media queries
+  window.Webflow = window.Webflow || []
+  window.Webflow.push(function () {
+    if (!window.FS_boot) return
+    if (window.gsap) {
+      window.FS_canAnimate = false
+      window.FS_media = gsap.matchMedia()
+      window.FS_media.add(
+        '(prefers-reduced-motion: no-preference) and (pointer: fine) and (min-width: 800px)',
+        function () {
+          window.FS_canAnimate = true
+        }
+      )
+      window.FS_media.add('(prefers-reduced-motion: reduce)', function () {
+        window.FS_canAnimate = false
+      })
+    }
+  })
+</script>
+
+<!-- 2) Context helpers -->
+<script>
+  // GSAP context storage and a single kill-all utility
+  // Cleans up when tab is hidden and before bfcache
+  window.Webflow = window.Webflow || []
+  window.Webflow.push(function () {
+    if (!window.FS_boot) return
+
+    window.FS_ctxList = window.FS_ctxList || []
+
+    window.FS_killAll = function () {
+      try {
+        window.FS_ctxList.forEach(function (ctx) {
+          try {
+            ctx.kill()
+          } catch (e) {}
+        })
+        window.FS_ctxList = []
+        if (window.ScrollTrigger) {
+          window.ScrollTrigger.getAll().forEach(function (t) {
+            try {
+              t.kill()
+            } catch (e) {}
+          })
+        }
+      } catch (e) {
+        if (console && console.warn) console.warn('FS_killAll error:', e)
+      }
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) window.FS_killAll()
+    })
+
+    // Important for Chrome bfcache
+    window.addEventListener('pagehide', function () {
+      window.FS_killAll()
+      try {
+        Webflow.require('ix2').destroy()
+      } catch (_) {}
+    })
+  })
+</script>
+
+<!-- Lenis initialisation -->
+<script>
+  // Creates Lenis instance and wires it to GSAP ticker if present
+  // Falls back to manual RAF if GSAP is not present
+  window.Webflow = window.Webflow || []
+  window.Webflow.push(function () {
+    if (!window.FS_boot) return
+
+    var lenis = null
+    var isTouch = window.matchMedia('(pointer: coarse)').matches
+
+    if (typeof window.Lenis !== 'undefined') {
+      lenis = new Lenis({
+        lerp: 0.05,
+        smoothWheel: true,
+        wheelMultiplier: 0.7,
+        touchMultiplier: 1,
+        syncTouch: isTouch,
+        autoResize: true,
+      })
+      window.__lenis = lenis
+
+      if (window.gsap && window.ScrollTrigger) {
+        lenis.on('scroll', window.ScrollTrigger.update)
+        window.gsap.ticker.add(function (time) {
+          lenis.raf(time * 1000)
+        })
+        window.gsap.ticker.lagSmoothing(0)
+      } else {
+        ;(function raf(t) {
+          lenis.raf(t)
+          requestAnimationFrame(raf)
+        })(performance.now())
+      }
+    }
+
+    window.FS_lenis = lenis
+  })
+</script>
+<!-- 4) Page restore and orientation handling -->
+<script>
+  // Reliable reinit on Chrome back or forward restore
+  // Resizes Lenis, re-inits Webflow IX2, refreshes ScrollTrigger
+  window.Webflow = window.Webflow || []
+  window.Webflow.push(function () {
+    if (!window.FS_boot) return
+    var lenis = window.FS_lenis || null
+
+    function isBackForwardRestore(evt) {
+      var nav =
+        performance && performance.getEntriesByType
+          ? performance.getEntriesByType('navigation')[0]
+          : null
+      var viaBF = !!(nav && nav.type === 'back_forward')
+      var persisted = !!(evt && evt.persisted)
+      return viaBF || persisted
+    }
+
+    window.addEventListener('pageshow', function (e) {
+      var restored = isBackForwardRestore(e)
+
+      if (lenis) {
+        try {
+          lenis.resize()
+          lenis.start()
+        } catch (_) {}
+      }
+
+      requestAnimationFrame(function () {
+        try {
+          Webflow.require('ix2').init()
+        } catch (_) {}
+        try {
+          window.ScrollTrigger && ScrollTrigger.refresh(true)
+        } catch (_) {}
+        if (restored) {
+          setTimeout(function () {
+            try {
+              Webflow.require('ix2').init()
+            } catch (_) {}
+            try {
+              window.ScrollTrigger && ScrollTrigger.refresh(true)
+            } catch (_) {}
+          }, 60)
+        }
+      })
+
+      document.querySelectorAll('video[autoplay]').forEach(function (v) {
+        var play = v.play && v.play.bind(v)
+        if (play) play().catch(function () {})
+      })
+    })
+
+    window.addEventListener('orientationchange', function () {
+      setTimeout(function () {
+        if (lenis) lenis.resize()
+      }, 400)
+    })
+
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) {
+        try {
+          Webflow.require('ix2').init()
+        } catch (_) {}
+        try {
+          window.ScrollTrigger && ScrollTrigger.refresh(true)
+        } catch (_) {}
+        if (lenis) {
+          lenis.resize()
+          lenis.start()
+        }
+      }
+    })
+  })
+</script>
+
+<!-- 5) IX2 LOAD RELIABILITY SHIM (global) -->
+<script>
+  // Ensures Webflow "When page finishes loading" animations run
+  // on first load and on Chrome/Safari bfcache revisits
+  window.Webflow = window.Webflow || []
+  window.Webflow.push(function () {
+    if (!window.FS_boot) return
+
+    function primeIX2() {
+      try {
+        Webflow.require('ix2').init()
+      } catch (_) {}
+    }
+
+    if (document.readyState === 'complete') primeIX2()
+    else window.addEventListener('load', primeIX2, { once: true })
+
+    function isBackForwardRestore(evt) {
+      var nav =
+        performance && performance.getEntriesByType
+          ? performance.getEntriesByType('navigation')[0]
+          : null
+      return !!(evt && evt.persisted) || !!(nav && nav.type === 'back_forward')
+    }
+
+    window.addEventListener('pageshow', function (e) {
+      if (!isBackForwardRestore(e)) return
+      requestAnimationFrame(function () {
+        primeIX2()
+        setTimeout(primeIX2, 60)
+      })
+    })
+
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) primeIX2()
+    })
+
+    window.addEventListener('pagehide', function () {
+      try {
+        Webflow.require('ix2').destroy()
+      } catch (_) {}
+    })
+  })
+</script>
+
+<!-- 6) Anchor links via Lenis -->
+<script>
+  // Smoothly scrolls to #targets using Lenis; safe fallback to native
+  window.Webflow = window.Webflow || []
+  window.Webflow.push(function () {
+    if (!window.FS_boot) return
+    var lenis = window.FS_lenis || null
+
+    document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        var sel = link.getAttribute('href')
+        if (!sel || sel === '#') return
+        var target = document.querySelector(sel)
+        if (!target) return
+        e.preventDefault()
+        if (lenis) lenis.scrollTo(target)
+        else target.scrollIntoView({ behavior: 'auto', block: 'start' })
+      })
+    })
+  })
+</script>

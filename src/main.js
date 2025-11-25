@@ -139,6 +139,7 @@
       { opacity: 0, duration: 1.2, ease: 'expo.inOut' }
     )
 
+    // IF FIRST TIME ON HOME PAGE
     if (name === 'home' && !ranHomeLoader) {
       lenis.stop()
       document.querySelector('body').style.cursor = 'wait'
@@ -207,6 +208,9 @@
         '<+=.1'
       )
     } else {
+      let isHome = name === 'home' ? true : false
+
+      // ELSE do a standard page loader
       gsap.fromTo(
         next,
         { y: '-10vh' },
@@ -228,8 +232,15 @@
           },
         }
       )
+      if (isHome) {
+        gsap.set('.loader_emblem-container.is--home', { display: 'flex' })
+        gsap.set('.loader_emblem-container.is--home .loader_emblem-wrap.is-2', {
+          display: 'none',
+        })
+      }
 
       tl.to(navLogo, { y: '0%', duration: 1.5 })
+      tl.to(spinner, { opacity: 0, duration: 0 }, '<')
       tl.from(navCounter, { y: '100%', duration: 1.5 }, '<+=.1')
       tl.fromTo(
         navButtonText,
@@ -275,15 +286,6 @@
     })
   }
 
-  function delay(n) {
-    n = n || 2000
-    return new Promise((done) => {
-      setTimeout(() => {
-        done()
-      }, n)
-    })
-  }
-
   function debounce(func, wait) {
     let timeout
     return function (...args) {
@@ -293,22 +295,6 @@
   }
 
   var activeSplitTexts = []
-
-  function cleanupSplitTexts() {
-    activeSplitTexts.forEach((splitObj) => {
-      if (splitObj && typeof splitObj.revert === 'function') {
-        splitObj.revert()
-      }
-    })
-    activeSplitTexts = []
-    document.querySelectorAll('[data-split-initialized]').forEach((el) => {
-      el.removeAttribute('data-split-initialized')
-    })
-    // if (worksPageCleanup) {
-    //   worksPageCleanup()
-    //   worksPageCleanup = null
-    // }
-  }
 
   const initButton = () => {
     const offsetIncrement = 0.01 // Transition offset increment in seconds
@@ -683,37 +669,6 @@
         } else {
           tl.reverse()
         }
-      })
-    })
-  }
-
-  const initServices = () => {
-    const mm = gsap.matchMedia()
-    mm.add(desktopQuery, () => {
-      const items = [...document.querySelector('.services_list').children]
-      const totalItems = items.length
-
-      items.forEach((item, position) => {
-        const isLast = position === totalItems - 1
-
-        gsap
-          .timeline({
-            scrollTrigger: {
-              trigger: item,
-              start: 'bottom bottom',
-              end: '+=110%',
-              scrub: true,
-            },
-          })
-          .fromTo(
-            item,
-            { y: '0rem' },
-            {
-              ease: 'power2.in',
-              y: isLast ? '0rem' : '20rem',
-            },
-            0
-          )
       })
     })
   }
@@ -1290,16 +1245,16 @@
     })
   }
 
-  function initHomeServicesStack(container) {
+  /*
+  function initServices(container) {
     let onResize, dc
-
     const ctx = gsap.context(() => {
       const panels = Array.from(container.querySelectorAll('.service_card'))
       if (panels.length < 3) return
-
-      const getOffset = () => parseFloat(gsap.getProperty(panels[1], 'top'))
+      const offsetNumber = parseFloat(gsap.getProperty(panels[1], 'top'))
+      const getOffset = () => offsetNumber
+      console.log(offsetNumber)
       const contrib = panels.map(() => ({}))
-
       function sum(obj) {
         let s = 0
         for (const k in obj) s += obj[k]
@@ -1309,12 +1264,10 @@
         const y = -getOffset() * sum(contrib[idx])
         gsap.set(panels[idx], { y })
       }
-
       panels.forEach((panel, i) => {
         if (i < 2) return
         const a = i - 1
         const b = i - 2
-
         ScrollTrigger.create({
           trigger: panel,
           start: () => `top ${getOffset() * 2}px`,
@@ -1332,14 +1285,11 @@
           },
         })
       })
-
       const refresh = () => {
         if (typeof lenis?.resize === 'function') lenis.resize()
         ScrollTrigger.refresh()
       }
-
       dc = gsap.delayedCall(0.8, refresh)
-
       let lastW = window.innerWidth
       onResize = debounce(() => {
         const w = window.innerWidth
@@ -1347,15 +1297,67 @@
         lastW = w
         refresh()
       }, 200)
-
       window.addEventListener('resize', onResize)
     }, container)
-
     return () => {
       window.removeEventListener('resize', onResize)
       if (dc) dc.kill()
       ctx.revert()
     }
+  }
+    */
+
+  // Function to handle scroll-triggered animations
+  const initServices = () => {
+    const mm = gsap.matchMedia()
+    mm.add('(min-width: 992px)', () => {
+      const contentElements = [...document.querySelectorAll('.service_card')]
+      const totalContentElements = contentElements.length
+
+      contentElements.forEach((el, position) => {
+        const isLast = position === totalContentElements - 1
+        const isEven = position % 2 === 0
+
+        gsap
+          .timeline({
+            scrollTrigger: {
+              trigger: el,
+              start: 'bottom 75%',
+              end: '+=100%',
+              scrub: true,
+            },
+          })
+          .to(
+            el.querySelector('.service_card-inner'),
+            {
+              ease: 'power1.in',
+              // rotate: isLast ? 0 : 5 * (isEven ? -1 : 1),
+              // x: isLast ? 0 : 80 * (isEven ? -1 : 1),
+              // y: isLast ? 0 : '10vh',
+            },
+            0
+          )
+          .to(
+            el,
+            {
+              ease: 'power1.in',
+              y: isLast ? 0 : '40vh',
+            },
+            0
+          )
+          .to(
+            el.querySelector('.service_bg'),
+            {
+              ease: 'power1.in',
+              scale: isLast ? 1 : 0.65,
+              // rotate: isLast ? 0 : 5 * (isEven ? -1 : 1),
+              startAt: { filter: 'brightness(100%) contrast(100%)' },
+              filter: isLast ? 'none' : 'brightness(60%) contrast(135%)',
+            },
+            0
+          )
+      })
+    })
   }
 
   const initPlayVideos = (container) => {
@@ -1388,10 +1390,9 @@
   const initHomePage = (next) => {
     initLenis(true)
     initHomeHero(next)
-    // initServices(next)
     initReviewSlider(next)
     initHomeClientStack(next)
-    initHomeServicesStack(next)
+    initServices(next)
   }
 
   const initProjectsDetailPage = (next) => {
@@ -1405,6 +1406,10 @@
   const initContactPage = (next) => {
     initForm()
     initBasicFormValidation()
+  }
+
+  const initServicesPage = (next) => {
+    initServices(next)
   }
 
   barba.hooks.after((data) => {
@@ -1495,6 +1500,16 @@
           initGlobal(next)
 
           initContactPage()
+        },
+      },
+      {
+        namespace: 'services',
+        afterEnter(data) {
+          let next = data.next.container
+          transitionIn(next)
+          initGlobal(next)
+
+          initServicesPage()
         },
       },
       // {

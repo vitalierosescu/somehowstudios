@@ -278,10 +278,20 @@
     if (typeof ix2 !== 'undefined') {
       ix2.init()
     }
-    $('.w--current').removeClass('w--current')
-    $('a').each(function () {
-      if ($(this).attr('href') === window.location.pathname) {
-        $(this).addClass('w--current')
+    // Remove ALL previous states everywhere
+    $('a[aria-current="page"]').removeAttr('aria-current')
+    $('a.w--current').removeClass('w--current')
+
+    // Debug
+    console.log('cleared all previous currents')
+
+    // Re-apply state
+    $('a[href]').each(function () {
+      const href = $(this).attr('href')
+      if (!href) return
+
+      if (href === window.location.pathname) {
+        $(this).addClass('w--current').attr('aria-current', 'page')
       }
     })
   }
@@ -317,10 +327,13 @@
     })
   }
 
-  const initParallax = () => {
+  const initParallax = (next) => {
+    if (!next) {
+      next = document.querySelector('[data-barba="container"]')
+    }
     const mm = gsap.matchMedia()
 
-    if (document.querySelector('.parallax-parent')) {
+    if (next.querySelector('.parallax-parent')) {
       mm.add('(min-width: 992px)', () => {
         // Animatie alleen op schermen groter dan 991px breed
         document
@@ -361,67 +374,84 @@
   }
 
   const initHomeHero = () => {
-    const tl = gsap.timeline({
-      defaults: {
-        ease: 'none',
-      },
-      scrollTrigger: {
-        trigger: '.section_home--gallery',
-        start: 'clamp(top bottom)',
-        end: 'bottom 60%',
-        scrub: true,
-      },
-    })
+    const mm = gsap.matchMedia()
+    mm.add('(min-width: 992px)', () => {
+      const tl = gsap.timeline({
+        defaults: {
+          ease: 'power1.out',
+        },
+        scrollTrigger: {
+          trigger: '.section_home--gallery',
+          start: 'clamp(top bottom)',
+          end: 'bottom 20%',
+          scrub: true,
+        },
+      })
 
-    tl.fromTo(
-      '.home--hero_visual-wrapper.is-2',
-      {
-        y: '90vh',
-      },
-      { y: '0vh' }
-    )
+      tl.fromTo(
+        '.home--hero_visual-wrapper.is-2',
+        {
+          y: '90vh',
+        },
+        { y: '0vh' }
+      )
+    })
   }
 
   const initNavMobile = () => {
+    const navStatusEl = document.querySelector('[data-navigation-status]')
     // Toggle Navigation
+
     document
-      .querySelectorAll('[data-navigation-toggle="toggle"]')
-      .forEach((toggleBtn) => {
-        toggleBtn.addEventListener('click', () => {
-          const navStatusEl = document.querySelector('[data-navigation-status]')
-          if (!navStatusEl) return
-          if (
-            navStatusEl.getAttribute('data-navigation-status') === 'not-active'
-          ) {
-            navStatusEl.setAttribute('data-navigation-status', 'active')
-            // If you use Lenis you can 'stop' Lenis here
-          } else {
-            navStatusEl.setAttribute('data-navigation-status', 'not-active')
-            // If you use Lenis you can 'start' Lenis here
-          }
-        })
+      .querySelector('[data-navigation-toggle="toggle"]')
+      .addEventListener('click', () => {
+        if (navStatusEl.getAttribute('data-navigation-status') === 'active') {
+          navStatusEl.setAttribute('data-navigation-status', 'not-active')
+          console.log('close nav')
+          lenis.start()
+          return
+        } else {
+          navStatusEl.setAttribute('data-navigation-status', 'active')
+          lenis.stop()
+          console.log('open nav')
+          return
+        }
       })
+
+    const closeNav = () => {
+      navStatusEl.setAttribute('data-navigation-status', 'not-active')
+      lenis.start()
+    }
+
+    const openNav = () => {
+      navStatusEl.setAttribute('data-navigation-status', 'active')
+      lenis.start()
+    }
 
     // Close Navigation
     document
       .querySelectorAll('[data-navigation-toggle="close"]')
       .forEach((closeBtn) => {
         closeBtn.addEventListener('click', () => {
-          const navStatusEl = document.querySelector('[data-navigation-status]')
-          if (!navStatusEl) return
-          navStatusEl.setAttribute('data-navigation-status', 'not-active')
-          // If you use Lenis you can 'start' Lenis here: Example Lenis.start();
+          closeNav()
+        })
+      })
+
+    // Open Navigation
+    document
+      .querySelectorAll('[data-navigation-toggle="open"]')
+      .forEach((closeBtn) => {
+        closeBtn.addEventListener('click', () => {
+          openNav()
         })
       })
 
     // Key ESC - Close Navigation
     document.addEventListener('keydown', (e) => {
       if (e.keyCode === 27) {
-        const navStatusEl = document.querySelector('[data-navigation-status]')
-        if (!navStatusEl) return
         if (navStatusEl.getAttribute('data-navigation-status') === 'active') {
           navStatusEl.setAttribute('data-navigation-status', 'not-active')
-          // If you use Lenis you can 'start' Lenis here
+          lenis.start()
         }
       }
     })
@@ -610,11 +640,12 @@
     if (!next) {
       next = document.querySelector('[data-barba="container"]')
     }
+    let namespace = next.getAttribute('data-barba-namespace')
 
     const targets = []
 
-    let namespace = next.getAttribute('data-barba-namespace')
-    console.log('Namespace:', namespace)
+    if (namespace === 'about') return
+
     const aboutSection = document.querySelector('.section_about')
     const loader = document.querySelector('.load-w')
     const navigation = document.querySelector('.navigation')
@@ -1379,12 +1410,12 @@
     initLenis()
     initCheckWindowHeight()
     initParallax()
-    initNavMobile()
     initSplitText()
     initScrollTriggerAnimations()
     initScrollProgressNumber()
     initAboutLinkAnimation(container)
     initPlayVideos(container)
+    // initNavMobile()
   }
 
   const initHomePage = (next) => {
@@ -1411,6 +1442,12 @@
   const initServicesPage = (next) => {
     initServices(next)
   }
+
+  /**
+   *
+   * BARBA INIT
+   *
+   */
 
   barba.hooks.after((data) => {
     $(data.next.container).removeClass('fixed')
@@ -1444,7 +1481,11 @@
     transitions: [
       {
         name: 'default',
-        //sync: true,
+        sync: true,
+        once(data) {
+          console.log('Barba once')
+          initNavMobile()
+        },
         leave(data) {
           let current = data.current.container
 
@@ -1467,9 +1508,9 @@
         namespace: 'home',
         afterEnter(data) {
           let next = data.next.container
+          transitionIn(next)
           initGlobal(next)
           initHomePage(next)
-          transitionIn(next)
         },
       },
       {
@@ -1512,13 +1553,14 @@
           initServicesPage()
         },
       },
-      // {
-      //   namespace: 'about',
-      //   afterEnter(data) {
-      //     let next = data.next.container
-      //     initGlobal(next)
-      //   },
-      // },
+      {
+        namespace: 'about',
+        afterEnter(data) {
+          let next = data.next.container
+          transitionIn(next)
+          initGlobal(next)
+        },
+      },
       {
         namespace: 'default',
         afterEnter(data) {

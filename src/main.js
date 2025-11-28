@@ -31,8 +31,8 @@
     if (Webflow.env('editor')) return
     lenis = new Lenis({
       duration: 0.8,
-      // infinite: isHome ? true : false,
-      // syncTouch: true,
+      infinite: isHome ? true : false,
+      syncTouch: true,
     })
 
     function raf(time) {
@@ -1481,7 +1481,7 @@
     transitions: [
       {
         name: 'default',
-        sync: true,
+        // sync: true,
         once(data) {
           console.log('Barba once')
           initNavMobile()

@@ -29,9 +29,10 @@
 
   function initLenis(isHome = false) {
     if (Webflow.env('editor')) return
+
     lenis = new Lenis({
       duration: 0.8,
-      infinite: isHome ? true : false,
+      infinite: isHome,
       syncTouch: true,
     })
 
@@ -40,16 +41,27 @@
       requestAnimationFrame(raf)
     }
 
-    lenis.scrollTo(0, {
-      offset: 0,
-      duration: 0.2,
-      force: true,
-      onComplete: () => {
-        // lenis.stop()
-      },
+    const mm = gsap.matchMedia()
+
+    mm.add('(min-width: 992px)', () => {
+      // Desktop
+      lenis.scrollTo(0, {
+        offset: 0,
+        duration: 0.2,
+        force: true,
+      })
     })
 
-    // lenis.scrollTo(0, 0)
+    mm.add('(max-width: 991px)', () => {
+      // Mobile: delay to avoid fighting the first rendering/touch sync
+      setTimeout(() => {
+        lenis.scrollTo(0, {
+          offset: 0,
+          duration: 0.1,
+          force: true,
+        })
+      }, 150)
+    })
 
     requestAnimationFrame(raf)
   }
@@ -511,31 +523,67 @@
     if (!container) return
     if (document.querySelector('.section_work-scroll')) {
       $('.section_work-scroll').each(function (index) {
-        let triggerElement = $(this)
-        let slidesAmount = $(this).attr('data-slides-amount')
-        let targetElement = $(this).find('.single-work-slide')
-        let targetThumbList = $(this).find('.thumbnail-list')
-
-        let tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: triggerElement,
-            start: 'top top',
-            end: 'bottom bottom',
-            scrub: 0,
-          },
-        })
-
-        tl.fromTo(
-          targetThumbList,
-          {
-            yPercent: 0,
-          },
-          {
-            yPercent: ((slidesAmount - 1) / slidesAmount) * -100,
-            ease: 'none',
-          }
-        )
+        // let triggerElement = $(this)
+        // let slidesAmount = $(this).attr('data-slides-amount')
+        // let targetElement = $(this).find('.single-work-slide')
+        // let targetThumbList = $(this).find('.thumbnail-list')
+        // let tl = gsap.timeline({
+        //   scrollTrigger: {
+        //     trigger: triggerElement,
+        //     start: 'top top',
+        //     end: 'bottom bottom',
+        //     scrub: 0,
+        //   },
+        // })
+        // tl.fromTo(
+        //   targetThumbList,
+        //   {
+        //     yPercent: 0,
+        //   },
+        //   {
+        //     yPercent: ((slidesAmount - 1) / slidesAmount) * -100,
+        //     ease: 'none',
+        //   }
+        // )
       })
+
+      let triggerElement = $('.section_work-scroll')
+      let slidesAmount = triggerElement.attr('data-slides-amount')
+      let targetElement = triggerElement.find(
+        '.work-scroll_sticky-wrap .col.col-grow'
+      )
+      console.log(slidesAmount)
+
+      let tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: triggerElement,
+          start: 'top 80%',
+          end: 'bottom bottom',
+        },
+      })
+      tl.fromTo(
+        targetElement[0],
+        {
+          x: '0rem',
+        },
+        {
+          x: '5rem',
+          ease: 'power4.inOut',
+          duration: 2,
+        }
+      )
+      tl.fromTo(
+        targetElement[1],
+        {
+          x: '0rem',
+        },
+        {
+          x: '-5rem',
+          ease: 'power4.inOut',
+          duration: 2,
+        },
+        0
+      )
 
       // Check the index of section in view
       function checkIndexSection() {
@@ -1508,9 +1556,9 @@
         namespace: 'home',
         afterEnter(data) {
           let next = data.next.container
-          transitionIn(next)
           initGlobal(next)
           initHomePage(next)
+          transitionIn(next)
         },
       },
       {

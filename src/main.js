@@ -29,11 +29,10 @@
 
   function initLenis(isHome = false) {
     if (Webflow.env('editor')) return
-
     lenis = new Lenis({
       duration: 0.8,
-      infinite: isHome,
-      syncTouch: true,
+      infinite: isHome ? true : false,
+      // syncTouch: true,
     })
 
     function raf(time) {
@@ -41,26 +40,10 @@
       requestAnimationFrame(raf)
     }
 
-    const mm = gsap.matchMedia()
-
-    mm.add('(min-width: 992px)', () => {
-      // Desktop
-      lenis.scrollTo(0, {
-        offset: 0,
-        duration: 0.2,
-        force: true,
-      })
-    })
-
-    mm.add('(max-width: 991px)', () => {
-      // Mobile: delay to avoid fighting the first rendering/touch sync
-      setTimeout(() => {
-        lenis.scrollTo(0, {
-          offset: 0,
-          duration: 0.1,
-          force: true,
-        })
-      }, 150)
+    lenis.scrollTo(0, {
+      offset: 0,
+      duration: 0.2,
+      force: true,
     })
 
     requestAnimationFrame(raf)
@@ -729,15 +712,8 @@
       marginTop: '45rem',
       duration: 1.6,
       ease: 'ease-primary',
-    }).to(
-      '.section_work-scroll',
-      {
-        y: '45rem',
-        duration: 1.6,
-        ease: 'ease-primary',
-      },
-      '<'
-    )
+    })
+
     triggers.forEach((trigger) => {
       trigger.addEventListener('click', (event) => {
         if (trigger.tagName === 'A') event.preventDefault()

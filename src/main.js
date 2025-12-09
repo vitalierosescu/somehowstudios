@@ -1768,14 +1768,21 @@
         lenis.start()
       },
     })
-    if (window.colorThemesReady) {
-      initCheckTheme(data.next.container)
-    } else {
-      document.addEventListener('colorThemesReady', () => {
-        initCheckTheme(data.next.container)
-      })
+
+    let themeInitialized = false
+
+    function runThemeInit() {
+      if (themeInitialized) return
+      themeInitialized = true
       initCheckTheme(data.next.container)
     }
+
+    document.addEventListener('colorThemesReady', runThemeInit)
+
+    // Fallback if the event was already dispatched or never fires
+    setTimeout(() => {
+      runThemeInit()
+    }, 50)
   })
 
   barba.hooks.leave((data) => {

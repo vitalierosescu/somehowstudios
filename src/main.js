@@ -1670,6 +1670,11 @@
     if (!container) {
       container = document.querySelector('[data-barba="container"]')
     }
+    const themeApi = window.colorThemes
+    if (!themeApi) {
+      console.warn('colorThemes is not ready yet')
+      return
+    }
     let isDark = container.getAttribute('data-theme') === 'dark'
     let isLight = container.getAttribute('data-theme') === 'light'
 
@@ -1684,14 +1689,14 @@
     }, 100)
 
     let originalThemeColor = container.getAttribute('data-theme') || 'light'
-    let originalTheme = { ...colorThemes.getTheme(originalThemeColor) }
+    let originalTheme = { ...themeApi.getTheme(originalThemeColor) }
 
     const targetToAnimate = document.querySelector('.page-wrap')
     let currentTheme = originalTheme // Keep track of current theme
 
     $('[data-theme]').each(function () {
       const defaultDuration = 0.5
-      let newTheme = colorThemes.getTheme($(this).attr('data-theme'))
+      let newTheme = themeApi.getTheme($(this).attr('data-theme'))
       currentTheme = newTheme // Update to the new theme
       console.log(currentTheme)
       gsap.to(targetToAnimate, {

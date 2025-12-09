@@ -370,13 +370,20 @@
 
   const initHomeHero = () => {
     const mm = gsap.matchMedia()
+
+    const homeHero = document.querySelector(
+      '.section_home--hero.is--hero .home--hero_fill'
+    )
+    const triggerEl = document.querySelector('.section_home--gallery')
+
     mm.add('(min-width: 992px)', () => {
+      // Annimate intro picutre
       const tl = gsap.timeline({
         defaults: {
           ease: 'power1.out',
         },
         scrollTrigger: {
-          trigger: '.section_home--gallery',
+          trigger: triggerEl,
           start: 'clamp(top bottom)',
           end: 'bottom 20%',
           scrub: true,
@@ -388,8 +395,26 @@
         {
           y: '90vh',
         },
-        { y: '0vh' }
+        {
+          y: '0vh',
+        }
       )
+      gsap.set(
+        homeHero,
+        {
+          y: '0vh',
+          ease: 'none',
+        },
+        0
+      )
+
+      // animateHero()
+    })
+
+    // Remove animations on tablet and down
+    mm.add('(max-width: 991px)', () => {
+      gsap.set(homeHero, { clearProps: 'all' })
+      ScrollTrigger.refresh()
     })
   }
 
@@ -501,35 +526,18 @@
       })
     }
   }
-  const initHomeClientStack = (container) => {
-    container = document.querySelector('body')
-    if (!container) return
-    if (document.querySelector('.section_work-scroll')) {
-      $('.section_work-scroll').each(function (index) {
-        // let triggerElement = $(this)
-        // let slidesAmount = $(this).attr('data-slides-amount')
-        // let targetElement = $(this).find('.single-work-slide')
-        // let targetThumbList = $(this).find('.thumbnail-list')
-        // let tl = gsap.timeline({
-        //   scrollTrigger: {
-        //     trigger: triggerElement,
-        //     start: 'top top',
-        //     end: 'bottom bottom',
-        //     scrub: 0,
-        //   },
-        // })
-        // tl.fromTo(
-        //   targetThumbList,
-        //   {
-        //     yPercent: 0,
-        //   },
-        //   {
-        //     yPercent: ((slidesAmount - 1) / slidesAmount) * -100,
-        //     ease: 'none',
-        //   }
-        // )
-      })
 
+  const initHomeClientStack = (container) => {
+    if (!container) {
+      container = document.querySelector('[data-barba="container"]')
+    }
+
+    const sectionsToTransitionBg = container.querySelectorAll('.home--section')
+    const homeHero = container.querySelector(
+      '.section_home--hero.is--hero .home--hero_fill'
+    )
+
+    if (document.querySelector('.section_work-scroll')) {
       let triggerElement = $('.section_work-scroll')
       let slidesAmount = triggerElement.attr('data-slides-amount')
       let targetElement = triggerElement.find(
@@ -542,31 +550,27 @@
           trigger: triggerElement,
           start: 'top 80%',
           end: 'bottom bottom',
+          scrub: true,
+          // onEnter: () => {
+          //   container.classList.remove('bg-yellow')
+          //   sectionsToTransitionBg.forEach((section) => {
+          //     section.classList.add('bg-white')
+          //   })
+          //   homeHero.classList.add('visibility-hidden')
+          // },
+          // onEnterBack: () => {
+          //   container.classList.add('bg-yellow')
+          //   sectionsToTransitionBg.forEach((section) => {
+          //     section.classList.remove('bg-white')
+          //   })
+          //   homeHero.classList.remove('visibility-hidden')
+          // },
         },
       })
-      tl.fromTo(
-        targetElement[0],
-        {
-          x: '0rem',
-        },
-        {
-          x: '5rem',
-          ease: 'power4.inOut',
-          duration: 2,
-        }
-      )
-      tl.fromTo(
-        targetElement[1],
-        {
-          x: '0rem',
-        },
-        {
-          x: '-5rem',
-          ease: 'power4.inOut',
-          duration: 2,
-        },
-        0
-      )
+
+      tl.to(homeHero, { autoAlpha: 0 })
+      tl.to(sectionsToTransitionBg, { backgroundColor: '#ffffff' }, 0)
+      tl.to(container, { backgroundColor: '#ffffff' }, 0)
 
       // Check the index of section in view
       function checkIndexSection() {
@@ -683,7 +687,8 @@
     let mainWrapper
 
     if (namespace === 'home') {
-      mainWrapper = next.querySelector('.main-wrapper')
+      // mainWrapper = next.querySelector('.main-wrapper')
+      mainWrapper = next
     } else {
       mainWrapper = next
 
@@ -728,7 +733,11 @@
     })
   }
 
-  const initReviewSlider = () => {
+  const initReviewSlider = (next) => {
+    if (!next) {
+      next = document.querySelector('[data-barba="container"]')
+    }
+
     document
       .querySelectorAll('.tab_wrap')
       .forEach((tabWrap, componentIndex) => {
@@ -809,12 +818,6 @@
           if (currentEl) currentEl.textContent = index + 1 // 1-based index
           if (totalEl) totalEl.textContent = panelItems.length
 
-          // Toggle active classes + aria attrs
-          // buttonItems.forEach((btn, i) => {
-          //   btn.classList.toggle('is-active', i === index)
-          //   btn.setAttribute('aria-selected', i === index ? 'true' : 'false')
-          //   btn.setAttribute('tabindex', i === index ? '0' : '-1')
-          // })
           panelItems.forEach((panel, i) =>
             panel.classList.toggle('is-active', i === index)
           )
@@ -914,51 +917,6 @@
         nextButton?.addEventListener('click', () => updateIndex(1))
         previousButton?.addEventListener('click', () => updateIndex(-1))
 
-        // Setup ids + keyboard navigation
-        // buttonItems.forEach((btn, index) => {
-        //   let tabId = tabWrap.getAttribute('data-tab-component-id')
-        //   tabId = tabId
-        //     ? tabId.toLowerCase().replaceAll(' ', '-')
-        //     : componentIndex + 1
-        //   let itemId = btn.getAttribute('data-tab-item-id')
-        //   itemId = itemId
-        //     ? itemId.toLowerCase().replaceAll(' ', '-')
-        //     : index + 1
-
-        //   btn.setAttribute('id', 'tab-button-' + tabId + '-' + itemId)
-        //   btn.setAttribute('aria-controls', 'tab-panel-' + tabId + '-' + itemId)
-        //   panelItems[index].setAttribute(
-        //     'id',
-        //     'tab-panel-' + tabId + '-' + itemId
-        //   )
-        //   panelItems[index].setAttribute('aria-labelledby', btn.id)
-
-        //   // Deep linking via ?tab-id= param
-        //   if (
-        //     new URLSearchParams(location.search).get('tab-id') ===
-        //     tabId + '-' + itemId
-        //   ) {
-        //     makeActive(index)
-        //     autoplay = 0
-        //     tabWrap.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        //     history.replaceState(
-        //       {},
-        //       '',
-        //       ((u) => (u.searchParams.delete('tab-id'), u))(
-        //         new URL(location.href)
-        //       )
-        //     )
-        //   }
-
-        //   btn.addEventListener('click', () => makeActive(index))
-        //   btn.addEventListener('keydown', (e) => {
-        //     if (['ArrowRight', 'ArrowDown'].includes(e.key))
-        //       updateIndex(1, true)
-        //     else if (['ArrowLeft', 'ArrowUp'].includes(e.key))
-        //       updateIndex(-1, true)
-        //   })
-        // })
-
         // Autoplay setup
         if (autoplay !== 0 && typeof gsap !== 'undefined') {
           autoplayTl = gsap.timeline({ repeat: -1 }).fromTo(
@@ -1022,6 +980,25 @@
           ).observe(tabWrap)
         }
       })
+
+    const triggerElement = document.querySelector('.section_reviews')
+    const homeHero = document.querySelector(
+      '.section_home--hero.is--hero .home--hero_fill'
+    )
+    const sectionsToTransitionBg = document.querySelectorAll('.home--section')
+
+    let tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: triggerElement,
+        start: 'top 80%',
+        end: 'bottom bottom',
+        scrub: true,
+      },
+    })
+
+    tl.to(homeHero, { autoAlpha: 1 })
+    tl.to(sectionsToTransitionBg, { backgroundColor: '#fdffdd' }, 0)
+    tl.to(next, { backgroundColor: '#fdffdd' }, 0)
   }
 
   function initDirectionalListHover(container) {
@@ -1084,66 +1061,180 @@
       })
   }
 
+  const initAccordion = (container) => {
+    if (!container) {
+      container = document.querySelector('[data-barba="container"]')
+    }
+
+    container
+      .querySelectorAll('.accordion_wrap')
+      .forEach((component, listIndex) => {
+        if (component.dataset.scriptInitialized) return
+        component.dataset.scriptInitialized = 'true'
+
+        const closePrevious =
+          component.getAttribute('data-close-previous') !== 'false'
+        const closeOnSecondClick =
+          component.getAttribute('data-close-on-second-click') !== 'false'
+        const openOnHover =
+          component.getAttribute('data-open-on-hover') === 'true'
+        const openByDefault =
+          component.getAttribute('data-open-by-default') !== null &&
+          !isNaN(+component.getAttribute('data-open-by-default'))
+            ? +component.getAttribute('data-open-by-default')
+            : false
+        const list = component.querySelector('.accordion_list')
+        let previousIndex = null,
+          closeFunctions = []
+
+        function removeCMSList(slot) {
+          const dynList = Array.from(slot.children).find((child) =>
+            child.classList.contains('w-dyn-list')
+          )
+          if (!dynList) return
+          const nestedItems = dynList?.firstElementChild?.children
+          if (!nestedItems) return
+          const staticWrapper = [...slot.children]
+          ;[...nestedItems].forEach(
+            (el) =>
+              el.firstElementChild && slot.appendChild(el.firstElementChild)
+          )
+          staticWrapper.forEach((el) => el.remove())
+        }
+        removeCMSList(list)
+
+        component
+          .querySelectorAll('.accordion_component')
+          .forEach((card, cardIndex) => {
+            const button = card.querySelector('.accordion_toggle_button')
+            const content = card.querySelector('.accordion_content_wrap')
+            const icon = card.querySelector('.accordion_toggle_icon')
+
+            if (!button || !content || !icon)
+              return console.warn('Missing elements:', card)
+
+            button.setAttribute('aria-expanded', 'false')
+            button.setAttribute(
+              'id',
+              'accordion_button_' + listIndex + '_' + cardIndex
+            )
+            content.setAttribute(
+              'id',
+              'accordion_content_' + listIndex + '_' + cardIndex
+            )
+            button.setAttribute('aria-controls', content.id)
+            content.setAttribute('aria-labelledby', button.id)
+            content.style.display = 'none'
+
+            const refresh = () => {
+              tl.invalidate()
+              if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh()
+            }
+            const tl = gsap.timeline({
+              paused: true,
+              defaults: { duration: 0.3, ease: 'ease-textloader' },
+              onComplete: refresh,
+              onReverseComplete: refresh,
+            })
+            tl.set(content, { display: 'block' })
+            tl.fromTo(content, { height: 0 }, { height: 'auto' })
+            tl.fromTo(icon, { rotate: 0 }, { rotate: -225 }, '<')
+
+            const closeAccordion = () =>
+              card.classList.contains('is-opened') &&
+              (card.classList.remove('is-opened'),
+              tl.reverse(),
+              button.setAttribute('aria-expanded', 'false'))
+            closeFunctions[cardIndex] = closeAccordion
+
+            const openAccordion = (instant = false) => {
+              if (
+                closePrevious &&
+                previousIndex !== null &&
+                previousIndex !== cardIndex
+              )
+                closeFunctions[previousIndex]?.()
+              previousIndex = cardIndex
+              button.setAttribute('aria-expanded', 'true')
+              card.classList.add('is-opened')
+              instant ? tl.progress(1) : tl.play()
+            }
+            if (openByDefault === cardIndex + 1) openAccordion(true)
+
+            button.addEventListener('click', () =>
+              card.classList.contains('is-opened') && closeOnSecondClick
+                ? (closeAccordion(), (previousIndex = null))
+                : openAccordion()
+            )
+            if (openOnHover)
+              button.addEventListener('mouseenter', () => openAccordion())
+          })
+      })
+  }
+
   const projectsSlider = (next) => {
     if (!next) {
       next = document.querySelector('[data-barba="container"]')
     }
-    next
-      .querySelectorAll('.slider_wrap:not(.w-condition-invisible)')
-      .forEach((wrap) => {
-        if (wrap.dataset.scriptInitialized) return
-        wrap.dataset.scriptInitialized = 'true'
 
-        const cmsWrap = wrap.querySelector('.slider_cms_wrap')
-        wrap
-          .querySelectorAll('.slider_cms_item.w-condition-invisible')
-          .forEach((el) => el.remove())
+    if (next.querySelectorAll('.slider_wrap:not(.w-condition-invisible)')) {
+      next
+        .querySelectorAll('.slider_wrap:not(.w-condition-invisible)')
+        .forEach((wrap) => {
+          if (wrap.dataset.scriptInitialized) return
+          wrap.dataset.scriptInitialized = 'true'
 
-        if (!cmsWrap) {
-          console.warn('Missing required elements for Swiper in:', wrap)
-          return
-        }
+          const cmsWrap = wrap.querySelector('.slider_cms_wrap')
+          wrap
+            .querySelectorAll('.slider_cms_item.w-condition-invisible')
+            .forEach((el) => el.remove())
 
-        const swiper = new Swiper(cmsWrap, {
-          slidesPerView: 'auto',
-          followFinger: true,
-          freeMode: false,
-          slideToClickedSlide: false,
-          centeredSlides: false,
-          autoHeight: false,
-          speed: 600,
-          mousewheel: {
-            forceToAxis: true,
-          },
-          loop: true,
-          keyboard: {
-            enabled: true,
-            onlyInViewport: true,
-          },
-          autoplay: {
-            delay: 3500,
-          },
-          navigation: {
-            nextEl: wrap.querySelector('.slider_btn_element.is-next'),
-            prevEl: wrap.querySelector('.slider_btn_element.is-prev'),
-          },
-          pagination: {
-            el: wrap.querySelector('.slider_bullet_wrap'),
-            bulletActiveClass: 'is-active',
-            bulletClass: 'slider_bullet_item',
-            bulletElement: 'button',
-            clickable: true,
-          },
-          scrollbar: {
-            el: wrap.querySelector('.slider_draggable_wrap'),
-            draggable: true,
-            dragClass: 'slider_draggable_handle',
-            snapOnRelease: true,
-          },
-          slideActiveClass: 'is-active',
-          slideDuplicateActiveClass: 'is-active',
+          if (!cmsWrap) {
+            console.warn('Missing required elements for Swiper in:', wrap)
+            return
+          }
+
+          const swiper = new Swiper(cmsWrap, {
+            slidesPerView: 'auto',
+            followFinger: true,
+            freeMode: false,
+            slideToClickedSlide: false,
+            centeredSlides: false,
+            autoHeight: false,
+            speed: 600,
+            mousewheel: {
+              forceToAxis: true,
+            },
+            loop: true,
+            keyboard: {
+              enabled: true,
+              onlyInViewport: true,
+            },
+            autoplay: {
+              delay: 3500,
+            },
+            navigation: {
+              nextEl: wrap.querySelector('.slider_btn_element.is-next'),
+              prevEl: wrap.querySelector('.slider_btn_element.is-prev'),
+            },
+            pagination: {
+              el: wrap.querySelector('.slider_bullet_wrap'),
+              bulletActiveClass: 'is-active',
+              bulletClass: 'slider_bullet_item',
+              bulletElement: 'button',
+              clickable: true,
+            },
+            scrollbar: {
+              el: wrap.querySelector('.slider_draggable_wrap'),
+              draggable: true,
+              dragClass: 'slider_draggable_handle',
+              snapOnRelease: true,
+            },
+            slideActiveClass: 'is-active',
+            slideDuplicateActiveClass: 'is-active',
+          })
         })
-      })
+    }
   }
 
   const initForm = () => {
@@ -1364,55 +1455,53 @@
 
   // Function to handle scroll-triggered animations
   const initServices = () => {
-    const mm = gsap.matchMedia()
-    mm.add('(min-width: 992px)', () => {
-      const contentElements = [...document.querySelectorAll('.service_card')]
-      const totalContentElements = contentElements.length
-
-      contentElements.forEach((el, position) => {
-        const isLast = position === totalContentElements - 1
-        const isEven = position % 2 === 0
-
-        gsap
-          .timeline({
-            scrollTrigger: {
-              trigger: el,
-              start: 'bottom 75%',
-              end: '+=100%',
-              scrub: true,
-            },
-          })
-          .to(
-            el.querySelector('.service_card-inner'),
-            {
-              ease: 'power1.in',
-              // rotate: isLast ? 0 : 5 * (isEven ? -1 : 1),
-              // x: isLast ? 0 : 80 * (isEven ? -1 : 1),
-              // y: isLast ? 0 : '10vh',
-            },
-            0
-          )
-          .to(
-            el,
-            {
-              ease: 'power1.in',
-              y: isLast ? 0 : '40vh',
-            },
-            0
-          )
-          .to(
-            el.querySelector('.service_bg'),
-            {
-              ease: 'power1.in',
-              scale: isLast ? 1 : 0.65,
-              // rotate: isLast ? 0 : 5 * (isEven ? -1 : 1),
-              startAt: { filter: 'brightness(100%) contrast(100%)' },
-              filter: isLast ? 'none' : 'brightness(60%) contrast(135%)',
-            },
-            0
-          )
-      })
-    })
+    // const mm = gsap.matchMedia()
+    // mm.add('(min-width: 992px)', () => {
+    //   const contentElements = [...document.querySelectorAll('.service_card')]
+    //   const totalContentElements = contentElements.length
+    //   contentElements.forEach((el, position) => {
+    //     const isLast = position === totalContentElements - 1
+    //     const isEven = position % 2 === 0
+    //     gsap
+    //       .timeline({
+    //         scrollTrigger: {
+    //           trigger: el,
+    //           start: 'bottom 75%',
+    //           end: '+=100%',
+    //           scrub: true,
+    //         },
+    //       })
+    //       .to(
+    //         el.querySelector('.service_card-inner'),
+    //         {
+    //           ease: 'power1.in',
+    //           // rotate: isLast ? 0 : 5 * (isEven ? -1 : 1),
+    //           // x: isLast ? 0 : 80 * (isEven ? -1 : 1),
+    //           // y: isLast ? 0 : '10vh',
+    //         },
+    //         0
+    //       )
+    //       .to(
+    //         el,
+    //         {
+    //           ease: 'power1.in',
+    //           y: isLast ? 0 : '40vh',
+    //         },
+    //         0
+    //       )
+    //       .to(
+    //         el.querySelector('.service_bg'),
+    //         {
+    //           ease: 'power1.in',
+    //           scale: isLast ? 1 : 0.65,
+    //           // rotate: isLast ? 0 : 5 * (isEven ? -1 : 1),
+    //           startAt: { filter: 'brightness(100%) contrast(100%)' },
+    //           filter: isLast ? 'none' : 'brightness(60%) contrast(135%)',
+    //         },
+    //         0
+    //       )
+    //   })
+    // })
   }
 
   const initPlayVideos = (container) => {
@@ -1422,6 +1511,196 @@
         console.warn('Video play was prevented:', error)
       })
     })
+  }
+
+  /**
+   * Theme Collector 1.1.1
+   * Released under the MIT License
+   * Released on: January 17, 2025
+   */
+
+  function getColorThemes() {
+    const STORAGE_KEYS = {
+      THEMES: 'colorThemes_data',
+      PUBLISH_DATE: 'colorThemes_publishDate',
+    }
+    function getPublishDate() {
+      const htmlComment = document.documentElement.previousSibling
+      return htmlComment?.nodeType === Node.COMMENT_NODE
+        ? new Date(
+            htmlComment.textContent.match(/Last Published: (.+?) GMT/)[1]
+          ).getTime()
+        : null
+    }
+
+    function loadFromStorage() {
+      try {
+        const storedPublishDate = localStorage.getItem(
+            STORAGE_KEYS.PUBLISH_DATE
+          ),
+          currentPublishDate = getPublishDate()
+        if (
+          !currentPublishDate ||
+          !storedPublishDate ||
+          storedPublishDate !== currentPublishDate.toString()
+        )
+          return null
+        return JSON.parse(localStorage.getItem(STORAGE_KEYS.THEMES))
+      } catch (error) {
+        console.warn('Failed to load from localStorage:', error)
+        return null
+      }
+    }
+
+    function saveToStorage(themes) {
+      try {
+        const publishDate = getPublishDate()
+        if (publishDate) {
+          localStorage.setItem(
+            STORAGE_KEYS.PUBLISH_DATE,
+            publishDate.toString()
+          )
+          localStorage.setItem(STORAGE_KEYS.THEMES, JSON.stringify(themes))
+        }
+      } catch (error) {
+        console.warn('Failed to save to localStorage:', error)
+      }
+    }
+
+    window.colorThemes = {
+      themes: {},
+      getTheme(themeName = '', brandName = '') {
+        if (!themeName)
+          return this.getTheme(Object.keys(this.themes)[0], brandName)
+        const theme = this.themes[themeName]
+        if (!theme) return {}
+        if (!theme.brands || Object.keys(theme.brands).length === 0)
+          return theme
+        if (!brandName) return theme.brands[Object.keys(theme.brands)[0]]
+        return theme.brands[brandName] || {}
+      },
+    }
+
+    const cachedThemes = loadFromStorage()
+    if (cachedThemes) {
+      window.colorThemes.themes = cachedThemes
+      document.dispatchEvent(new CustomEvent('colorThemesReady'))
+      return
+    }
+
+    const firstLink = document.querySelector('link[rel="stylesheet"]')
+    if (!firstLink?.href) return null
+
+    const themeVariables = new Set(),
+      themeClasses = new Set(),
+      brandClasses = new Set()
+
+    fetch(firstLink.href)
+      .then((response) => {
+        if (!response.ok)
+          throw new Error(`Failed to fetch stylesheet: ${response.statusText}`)
+        return response.text()
+      })
+      .then((cssText) => {
+        ;(cssText.match(/--_theme[\w-]+:\s*[^;]+/g) || []).forEach((variable) =>
+          themeVariables.add(variable.split(':')[0].trim())
+        )
+        ;(cssText.match(/\.u-(theme|brand)-[\w-]+/g) || []).forEach(
+          (className) => {
+            if (className.startsWith('.u-theme-')) themeClasses.add(className)
+            if (className.startsWith('.u-brand-')) brandClasses.add(className)
+          }
+        )
+
+        const themeVariablesArray = Array.from(themeVariables)
+        function checkClass(themeClass, brandClass = null) {
+          let documentClasses = document.documentElement.getAttribute('class')
+          document.documentElement.setAttribute('class', '')
+          document.documentElement.classList.add(themeClass, brandClass)
+          const styleObject = {}
+          themeVariablesArray.forEach(
+            (variable) =>
+              (styleObject[variable] = getComputedStyle(
+                document.documentElement
+              ).getPropertyValue(variable))
+          )
+          document.documentElement.setAttribute('class', documentClasses)
+          return styleObject
+        }
+
+        themeClasses.forEach((themeClassWithDot) => {
+          const themeName = themeClassWithDot
+            .replace('.', '')
+            .replace('u-theme-', '')
+          window.colorThemes.themes[themeName] = { brands: {} }
+          brandClasses.forEach((brandClassWithDot) => {
+            const brandName = brandClassWithDot
+              .replace('.', '')
+              .replace('u-brand-', '')
+            window.colorThemes.themes[themeName].brands[brandName] = checkClass(
+              themeClassWithDot.replace('.', ''),
+              brandClassWithDot.replace('.', '')
+            )
+          })
+          if (!brandClasses.size)
+            window.colorThemes.themes[themeName] = checkClass(
+              themeClassWithDot.replace('.', '')
+            )
+        })
+
+        saveToStorage(window.colorThemes.themes)
+        document.dispatchEvent(new CustomEvent('colorThemesReady'))
+      })
+      .catch((error) => console.error('Error:', error.message))
+  }
+  window.addEventListener('DOMContentLoaded', (event) => {
+    getColorThemes()
+  })
+
+  /**
+   *
+   *
+   *
+   * NAV
+   *
+   *
+   */
+
+  const initCheckTheme = (container) => {
+    if (!container) {
+      container = document.querySelector('[data-barba="container"]')
+    }
+    let isDark = container.getAttribute('data-theme') === 'dark'
+    let isLight = container.getAttribute('data-theme') === 'light'
+
+    setTimeout(() => {
+      if (isDark) {
+        document.querySelector('body').classList.remove('u-theme-light')
+        document.querySelector('body').classList.add('u-theme-dark')
+      } else if (isLight) {
+        document.querySelector('body').classList.remove('u-theme-dark')
+        document.querySelector('body').classList.add('u-theme-light')
+      }
+    }, 100)
+
+    let originalThemeColor = container.getAttribute('data-theme') || 'light'
+    let originalTheme = { ...colorThemes.getTheme(originalThemeColor) }
+
+    const targetToAnimate = document.querySelector('.page-wrap')
+    let currentTheme = originalTheme // Keep track of current theme
+
+    $('[data-theme]').each(function () {
+      const defaultDuration = 0.5
+      let newTheme = colorThemes.getTheme($(this).attr('data-theme'))
+      currentTheme = newTheme // Update to the new theme
+      console.log(currentTheme)
+      gsap.to(targetToAnimate, {
+        ...newTheme,
+        duration: defaultDuration,
+      })
+    })
+
+    console.log('this ran')
   }
 
   /**
@@ -1439,19 +1718,22 @@
     initScrollProgressNumber()
     initAboutLinkAnimation(container)
     initPlayVideos(container)
+    initAccordion(container)
+    // initCheckTheme(container)
     // initNavMobile()
   }
 
   const initHomePage = (next) => {
     initLenis(true)
     initHomeHero(next)
-    initReviewSlider(next)
     initHomeClientStack(next)
+    initReviewSlider(next)
     initServices(next)
   }
 
   const initProjectsDetailPage = (next) => {
     projectsSlider(next)
+    window.FinsweetAttributes.modules.list.restart()
   }
 
   const initProjectsPage = (next) => {
@@ -1486,6 +1768,7 @@
         lenis.start()
       },
     })
+    initCheckTheme(data.next.container)
   })
 
   barba.hooks.leave((data) => {
@@ -1507,7 +1790,9 @@
         name: 'default',
         // sync: true,
         once(data) {
-          console.log('Barba once')
+          document.addEventListener('colorThemesReady', () => {
+            initCheckTheme()
+          })
           initNavMobile()
         },
         leave(data) {

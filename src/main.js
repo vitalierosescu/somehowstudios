@@ -1768,7 +1768,14 @@
         lenis.start()
       },
     })
-    initCheckTheme(data.next.container)
+    if (window.colorThemesReady) {
+      initCheckTheme(data.next.container)
+    } else {
+      document.addEventListener('colorThemesReady', () => {
+        initCheckTheme(data.next.container)
+      })
+      initCheckTheme(data.next.container)
+    }
   })
 
   barba.hooks.leave((data) => {

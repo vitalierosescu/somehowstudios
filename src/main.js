@@ -731,6 +731,21 @@
         }
       })
     })
+
+    const allLinks = document.querySelectorAll(
+      'a[href]:not([data-link="about"])'
+    )
+    allLinks.forEach((trigger) => {
+      trigger.addEventListener('click', (event) => {
+        if (trigger.tagName === 'A') event.preventDefault()
+
+        if (tl.reversed()) {
+          //tl.play()
+        } else {
+          tl.reverse()
+        }
+      })
+    })
   }
 
   const initReviewSlider = (next) => {
@@ -1655,6 +1670,7 @@
   }
   window.addEventListener('DOMContentLoaded', (event) => {
     getColorThemes()
+    console.log(window.colorThemes)
   })
 
   /**
@@ -1724,7 +1740,7 @@
     initAboutLinkAnimation(container)
     initPlayVideos(container)
     initAccordion(container)
-    // initCheckTheme(container)
+    initCheckTheme(container)
     // initNavMobile()
   }
 
@@ -1774,20 +1790,7 @@
       },
     })
 
-    let themeInitialized = false
-
-    function runThemeInit() {
-      if (themeInitialized) return
-      themeInitialized = true
-      initCheckTheme(data.next.container)
-    }
-
-    document.addEventListener('colorThemesReady', runThemeInit)
-
-    // Fallback if the event was already dispatched or never fires
-    setTimeout(() => {
-      runThemeInit()
-    }, 50)
+    // initCheckTheme(data.next.container)
   })
 
   barba.hooks.leave((data) => {

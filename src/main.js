@@ -1689,7 +1689,7 @@
     const themeApi = window.colorThemes
     if (!themeApi) {
       console.warn('colorThemes is not ready yet')
-      return
+      //return
     }
     let isDark = container.getAttribute('data-theme') === 'dark'
     let isLight = container.getAttribute('data-theme') === 'light'
@@ -1740,7 +1740,7 @@
     initAboutLinkAnimation(container)
     initPlayVideos(container)
     initAccordion(container)
-    initCheckTheme(container)
+    // initCheckTheme(container)
     // initNavMobile()
   }
 
@@ -1790,7 +1790,7 @@
       },
     })
 
-    // initCheckTheme(data.next.container)
+    initCheckTheme(data.next.container)
   })
 
   barba.hooks.leave((data) => {

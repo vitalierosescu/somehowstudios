@@ -1534,144 +1534,149 @@
    * Released on: January 17, 2025
    */
 
-  function getColorThemes() {
-    const STORAGE_KEYS = {
-      THEMES: 'colorThemes_data',
-      PUBLISH_DATE: 'colorThemes_publishDate',
-    }
-    function getPublishDate() {
-      const htmlComment = document.documentElement.previousSibling
-      return htmlComment?.nodeType === Node.COMMENT_NODE
-        ? new Date(
-            htmlComment.textContent.match(/Last Published: (.+?) GMT/)[1]
-          ).getTime()
-        : null
-    }
+  const initGetColorThemes = () => {
+    function getColorThemes() {
+      const STORAGE_KEYS = {
+        THEMES: 'colorThemes_data',
+        PUBLISH_DATE: 'colorThemes_publishDate',
+      }
+      function getPublishDate() {
+        const htmlComment = document.documentElement.previousSibling
+        return htmlComment?.nodeType === Node.COMMENT_NODE
+          ? new Date(
+              htmlComment.textContent.match(/Last Published: (.+?) GMT/)[1]
+            ).getTime()
+          : null
+      }
 
-    function loadFromStorage() {
-      try {
-        const storedPublishDate = localStorage.getItem(
-            STORAGE_KEYS.PUBLISH_DATE
-          ),
-          currentPublishDate = getPublishDate()
-        if (
-          !currentPublishDate ||
-          !storedPublishDate ||
-          storedPublishDate !== currentPublishDate.toString()
-        )
+      function loadFromStorage() {
+        try {
+          const storedPublishDate = localStorage.getItem(
+              STORAGE_KEYS.PUBLISH_DATE
+            ),
+            currentPublishDate = getPublishDate()
+          if (
+            !currentPublishDate ||
+            !storedPublishDate ||
+            storedPublishDate !== currentPublishDate.toString()
+          )
+            return null
+          return JSON.parse(localStorage.getItem(STORAGE_KEYS.THEMES))
+        } catch (error) {
+          console.warn('Failed to load from localStorage:', error)
           return null
-        return JSON.parse(localStorage.getItem(STORAGE_KEYS.THEMES))
-      } catch (error) {
-        console.warn('Failed to load from localStorage:', error)
-        return null
-      }
-    }
-
-    function saveToStorage(themes) {
-      try {
-        const publishDate = getPublishDate()
-        if (publishDate) {
-          localStorage.setItem(
-            STORAGE_KEYS.PUBLISH_DATE,
-            publishDate.toString()
-          )
-          localStorage.setItem(STORAGE_KEYS.THEMES, JSON.stringify(themes))
         }
-      } catch (error) {
-        console.warn('Failed to save to localStorage:', error)
       }
-    }
 
-    window.colorThemes = {
-      themes: {},
-      getTheme(themeName = '', brandName = '') {
-        if (!themeName)
-          return this.getTheme(Object.keys(this.themes)[0], brandName)
-        const theme = this.themes[themeName]
-        if (!theme) return {}
-        if (!theme.brands || Object.keys(theme.brands).length === 0)
-          return theme
-        if (!brandName) return theme.brands[Object.keys(theme.brands)[0]]
-        return theme.brands[brandName] || {}
-      },
-    }
-
-    const cachedThemes = loadFromStorage()
-    if (cachedThemes) {
-      window.colorThemes.themes = cachedThemes
-      document.dispatchEvent(new CustomEvent('colorThemesReady'))
-      return
-    }
-
-    const firstLink = document.querySelector('link[rel="stylesheet"]')
-    if (!firstLink?.href) return null
-
-    const themeVariables = new Set(),
-      themeClasses = new Set(),
-      brandClasses = new Set()
-
-    fetch(firstLink.href)
-      .then((response) => {
-        if (!response.ok)
-          throw new Error(`Failed to fetch stylesheet: ${response.statusText}`)
-        return response.text()
-      })
-      .then((cssText) => {
-        ;(cssText.match(/--_theme[\w-]+:\s*[^;]+/g) || []).forEach((variable) =>
-          themeVariables.add(variable.split(':')[0].trim())
-        )
-        ;(cssText.match(/\.u-(theme|brand)-[\w-]+/g) || []).forEach(
-          (className) => {
-            if (className.startsWith('.u-theme-')) themeClasses.add(className)
-            if (className.startsWith('.u-brand-')) brandClasses.add(className)
+      function saveToStorage(themes) {
+        try {
+          const publishDate = getPublishDate()
+          if (publishDate) {
+            localStorage.setItem(
+              STORAGE_KEYS.PUBLISH_DATE,
+              publishDate.toString()
+            )
+            localStorage.setItem(STORAGE_KEYS.THEMES, JSON.stringify(themes))
           }
-        )
-
-        const themeVariablesArray = Array.from(themeVariables)
-        function checkClass(themeClass, brandClass = null) {
-          let documentClasses = document.documentElement.getAttribute('class')
-          document.documentElement.setAttribute('class', '')
-          document.documentElement.classList.add(themeClass, brandClass)
-          const styleObject = {}
-          themeVariablesArray.forEach(
-            (variable) =>
-              (styleObject[variable] = getComputedStyle(
-                document.documentElement
-              ).getPropertyValue(variable))
-          )
-          document.documentElement.setAttribute('class', documentClasses)
-          return styleObject
+        } catch (error) {
+          console.warn('Failed to save to localStorage:', error)
         }
+      }
 
-        themeClasses.forEach((themeClassWithDot) => {
-          const themeName = themeClassWithDot
-            .replace('.', '')
-            .replace('u-theme-', '')
-          window.colorThemes.themes[themeName] = { brands: {} }
-          brandClasses.forEach((brandClassWithDot) => {
-            const brandName = brandClassWithDot
-              .replace('.', '')
-              .replace('u-brand-', '')
-            window.colorThemes.themes[themeName].brands[brandName] = checkClass(
-              themeClassWithDot.replace('.', ''),
-              brandClassWithDot.replace('.', '')
-            )
-          })
-          if (!brandClasses.size)
-            window.colorThemes.themes[themeName] = checkClass(
-              themeClassWithDot.replace('.', '')
-            )
-        })
+      window.colorThemes = {
+        themes: {},
+        getTheme(themeName = '', brandName = '') {
+          if (!themeName)
+            return this.getTheme(Object.keys(this.themes)[0], brandName)
+          const theme = this.themes[themeName]
+          if (!theme) return {}
+          if (!theme.brands || Object.keys(theme.brands).length === 0)
+            return theme
+          if (!brandName) return theme.brands[Object.keys(theme.brands)[0]]
+          return theme.brands[brandName] || {}
+        },
+      }
 
-        saveToStorage(window.colorThemes.themes)
+      const cachedThemes = loadFromStorage()
+      if (cachedThemes) {
+        window.colorThemes.themes = cachedThemes
         document.dispatchEvent(new CustomEvent('colorThemesReady'))
-      })
-      .catch((error) => console.error('Error:', error.message))
+        return
+      }
+
+      const firstLink = document.querySelector('link[rel="stylesheet"]')
+      if (!firstLink?.href) return null
+
+      const themeVariables = new Set(),
+        themeClasses = new Set(),
+        brandClasses = new Set()
+
+      fetch(firstLink.href)
+        .then((response) => {
+          if (!response.ok)
+            throw new Error(
+              `Failed to fetch stylesheet: ${response.statusText}`
+            )
+          return response.text()
+        })
+        .then((cssText) => {
+          ;(cssText.match(/--_theme[\w-]+:\s*[^;]+/g) || []).forEach(
+            (variable) => themeVariables.add(variable.split(':')[0].trim())
+          )
+          ;(cssText.match(/\.u-(theme|brand)-[\w-]+/g) || []).forEach(
+            (className) => {
+              if (className.startsWith('.u-theme-')) themeClasses.add(className)
+              if (className.startsWith('.u-brand-')) brandClasses.add(className)
+            }
+          )
+
+          const themeVariablesArray = Array.from(themeVariables)
+          function checkClass(themeClass, brandClass = null) {
+            let documentClasses = document.documentElement.getAttribute('class')
+            document.documentElement.setAttribute('class', '')
+            document.documentElement.classList.add(themeClass, brandClass)
+            const styleObject = {}
+            themeVariablesArray.forEach(
+              (variable) =>
+                (styleObject[variable] = getComputedStyle(
+                  document.documentElement
+                ).getPropertyValue(variable))
+            )
+            document.documentElement.setAttribute('class', documentClasses)
+            return styleObject
+          }
+
+          themeClasses.forEach((themeClassWithDot) => {
+            const themeName = themeClassWithDot
+              .replace('.', '')
+              .replace('u-theme-', '')
+            window.colorThemes.themes[themeName] = { brands: {} }
+            brandClasses.forEach((brandClassWithDot) => {
+              const brandName = brandClassWithDot
+                .replace('.', '')
+                .replace('u-brand-', '')
+              window.colorThemes.themes[themeName].brands[brandName] =
+                checkClass(
+                  themeClassWithDot.replace('.', ''),
+                  brandClassWithDot.replace('.', '')
+                )
+            })
+            if (!brandClasses.size)
+              window.colorThemes.themes[themeName] = checkClass(
+                themeClassWithDot.replace('.', '')
+              )
+          })
+
+          saveToStorage(window.colorThemes.themes)
+          document.dispatchEvent(new CustomEvent('colorThemesReady'))
+        })
+        .catch((error) => console.error('Error:', error.message))
+    }
+    window.addEventListener('DOMContentLoaded', (event) => {
+      getColorThemes()
+      console.log(window.colorThemes)
+    })
   }
-  window.addEventListener('DOMContentLoaded', (event) => {
-    getColorThemes()
-    console.log(window.colorThemes)
-  })
 
   /**
    *
@@ -1686,33 +1691,27 @@
     if (!container) {
       container = document.querySelector('[data-barba="container"]')
     }
-    const themeApi = window.colorThemes
-    if (!themeApi) {
-      console.warn('colorThemes is not ready yet')
-      //return
-    }
+
     let isDark = container.getAttribute('data-theme') === 'dark'
     let isLight = container.getAttribute('data-theme') === 'light'
 
-    setTimeout(() => {
-      if (isDark) {
-        document.querySelector('body').classList.remove('u-theme-light')
-        document.querySelector('body').classList.add('u-theme-dark')
-      } else if (isLight) {
-        document.querySelector('body').classList.remove('u-theme-dark')
-        document.querySelector('body').classList.add('u-theme-light')
-      }
-    }, 100)
+    if (isDark) {
+      document.querySelector('body').classList.remove('u-theme-light')
+      document.querySelector('body').classList.add('u-theme-dark')
+    } else if (isLight) {
+      document.querySelector('body').classList.remove('u-theme-dark')
+      document.querySelector('body').classList.add('u-theme-light')
+    }
 
     let originalThemeColor = container.getAttribute('data-theme') || 'light'
-    let originalTheme = { ...themeApi.getTheme(originalThemeColor) }
+    let originalTheme = { ...colorThemes.getTheme(originalThemeColor) }
 
     const targetToAnimate = document.querySelector('.page-wrap')
     let currentTheme = originalTheme // Keep track of current theme
 
     $('[data-theme]').each(function () {
       const defaultDuration = 0.5
-      let newTheme = themeApi.getTheme($(this).attr('data-theme'))
+      let newTheme = colorThemes.getTheme($(this).attr('data-theme'))
       currentTheme = newTheme // Update to the new theme
       console.log(currentTheme)
       gsap.to(targetToAnimate, {
@@ -1740,7 +1739,16 @@
     initAboutLinkAnimation(container)
     initPlayVideos(container)
     initAccordion(container)
+    initGetColorThemes(container)
+    if (window.colorThemes) {
+      initCheckTheme()
+    } else {
+      document.addEventListener('colorThemesReady', () => {
+        initCheckTheme()
+      })
+    }
     // initCheckTheme(container)
+
     // initNavMobile()
   }
 
@@ -1790,7 +1798,7 @@
       },
     })
 
-    initCheckTheme(data.next.container)
+    // initCheckTheme(data.next.container)
   })
 
   barba.hooks.leave((data) => {
@@ -1812,9 +1820,9 @@
         name: 'default',
         // sync: true,
         once(data) {
-          document.addEventListener('colorThemesReady', () => {
-            initCheckTheme()
-          })
+          // document.addEventListener('colorThemesReady', () => {
+          //   initCheckTheme()
+          // })
           initNavMobile()
         },
         leave(data) {

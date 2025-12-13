@@ -1774,17 +1774,14 @@
         clearTimeout(resizeTimer)
         resizeTimer = setTimeout(function () {
           window.location.reload()
+          if (isMobileScreen) {
+            initLenis(false)
+          }
           previousWindowWidth = window.innerWidth
         }, 250)
       }
     }
-    window.addEventListener('resize', handleResize)
 
-    window.addEventListener('resize', () => {
-      if (isMobileScreen) {
-        initLenis(false)
-      }
-    })
     initHomeHero(next)
     initHomeClientStack(next)
     initReviewSlider(next)

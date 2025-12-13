@@ -85,7 +85,7 @@
     document.body.style.cursor = 'wait'
     gsap.set(loadWrap, { display: 'flex' })
     gsap.set(loadBlock, { transformOrigin: '50% 100%' })
-    gsap.to(current, { y: '-10vh', duration: 1.2, ease: 'expo.inOut' })
+    gsap.to(current, { y: '-10dvh', duration: 1.2, ease: 'expo.inOut' })
     gsap.fromTo(
       pageOverlay,
       { opacity: 0 },

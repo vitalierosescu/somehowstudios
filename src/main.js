@@ -239,6 +239,7 @@
           onComplete: () => {
             gsap.set(loadWrap, { display: 'none' })
             document.body.style.cursor = 'default'
+            lenis.start()
           },
         }
       )
@@ -1760,6 +1761,8 @@
   }
 
   const initHomePage = (next) => {
+    let isMobileScreen = window.matchMedia('(max-width: 767px)').matches
+
     if (isMobileScreen) {
       initLenis(false)
     } else {
@@ -1777,6 +1780,7 @@
           if (isMobileScreen) {
             initLenis(false)
           }
+          lenis.start()
           previousWindowWidth = window.innerWidth
         }, 250)
       }
@@ -1841,6 +1845,7 @@
 
   barba.hooks.enter((data) => {
     $(data.next.container).addClass('fixed')
+    lenis.start()
   })
 
   barba.init({

@@ -206,11 +206,11 @@
       let isHome = name === 'home' ? true : false
 
       // ELSE do a standard page loader
-      gsap.fromTo(
-        next,
-        { y: '-10vh' },
-        { y: '0vh', duration: 1, ease: 'expo.inOut' }
-      )
+      // gsap.fromTo(
+      //   next,
+      //   { y: '-10vh' },
+      //   { y: '0vh', duration: 1, ease: 'expo.inOut' }
+      // )
       gsap.fromTo(
         loadBlock,
         {
@@ -218,7 +218,7 @@
         },
         {
           scaleY: 0,
-          duration: 1,
+          duration: 0.8,
           ease: 'ease-transition',
           stagger: 0.1,
           onComplete: () => {
@@ -234,19 +234,19 @@
         })
       }
 
-      tl.to(navLogo, { y: '0%', duration: 1.5 })
+      tl.to(navLogo, { y: '0%', duration: 1 })
       tl.to(spinner, { opacity: 0, duration: 0 }, '<')
-      tl.from(navCounter, { y: '100%', duration: 1.5 }, '<+=.1')
+      tl.from(navCounter, { y: '100%', duration: 1 }, '<+=.1')
       tl.fromTo(
         navButtonText,
         { y: '100%' },
-        { y: '0%', duration: 1.5, stagger: 0.1 },
+        { y: '0%', duration: 1, stagger: 0.05 },
         '<+=.1'
       )
       tl.fromTo(
         navButtonBg,
         { opacity: 0, scale: 0.8 },
-        { opacity: 1, scale: 1, stagger: 0.1, duration: 2 },
+        { opacity: 1, scale: 1, stagger: 0.05, duration: 1.5 },
         '<+=.1'
       )
     }
@@ -276,9 +276,6 @@
     // Remove ALL previous states everywhere
     $('a[aria-current="page"]').removeAttr('aria-current')
     $('a.w--current').removeClass('w--current')
-
-    // Debug
-    console.log('cleared all previous currents')
 
     // Re-apply state
     $('a[href]').each(function () {
@@ -543,7 +540,6 @@
       let targetElement = triggerElement.find(
         '.work-scroll_sticky-wrap .col.col-grow'
       )
-      console.log(slidesAmount)
 
       let tl = gsap.timeline({
         scrollTrigger: {
@@ -691,8 +687,6 @@
       mainWrapper = next
     } else {
       mainWrapper = next
-
-      console.log('Main Wrapper:', mainWrapper)
     }
 
     targets.push(navigation)
@@ -719,32 +713,41 @@
       ease: 'ease-primary',
     })
 
-    triggers.forEach((trigger) => {
-      trigger.addEventListener('click', (event) => {
-        if (trigger.tagName === 'A') event.preventDefault()
-        aboutSection.classList.add('is--active')
+    // triggers.forEach((trigger) => {
+    //   trigger.addEventListener('click', (event) => {
+    //     if (trigger.tagName === 'A') event.preventDefault()
+    //     aboutSection.classList.add('is--active')
 
-        if (tl.reversed()) {
-          tl.play()
-        } else {
-          tl.reverse()
-        }
-      })
-    })
+    //     if (tl.reversed()) {
+    //       tl.play()
+    //     } else {
+    //       tl.reverse()
+    //     }
+    //   })
+    // })
 
-    const allLinks = document.querySelectorAll(
-      'a[href]:not([data-link="about"])'
-    )
+    const allLinks = document.querySelectorAll('a[href]')
     allLinks.forEach((trigger) => {
-      trigger.addEventListener('click', (event) => {
-        if (trigger.tagName === 'A') event.preventDefault()
+      if (
+        trigger.parentElement &&
+        trigger.parentElement.getAttribute('data-link') === 'about'
+      ) {
+        trigger.addEventListener('click', (event) => {
+          if (trigger.tagName === 'A') event.preventDefault()
+          aboutSection.classList.add('is--active')
 
-        if (tl.reversed()) {
-          //tl.play()
-        } else {
+          if (tl.reversed()) {
+            tl.play()
+          } else {
+            tl.reverse()
+          }
+        })
+      } else {
+        trigger.addEventListener('click', (event) => {
+          // if (trigger.tagName === 'A') event.preventDefault()
           tl.reverse()
-        }
-      })
+        })
+      }
     })
   }
 
@@ -1698,9 +1701,11 @@
     if (isDark) {
       document.querySelector('body').classList.remove('u-theme-light')
       document.querySelector('body').classList.add('u-theme-dark')
+      console.log('theme should switch to dark')
     } else if (isLight) {
       document.querySelector('body').classList.remove('u-theme-dark')
       document.querySelector('body').classList.add('u-theme-light')
+      console.log('theme should switch to light')
     }
 
     let originalThemeColor = container.getAttribute('data-theme') || 'light'
@@ -1713,14 +1718,13 @@
       const defaultDuration = 0.5
       let newTheme = colorThemes.getTheme($(this).attr('data-theme'))
       currentTheme = newTheme // Update to the new theme
-      console.log(currentTheme)
       gsap.to(targetToAnimate, {
         ...newTheme,
         duration: defaultDuration,
       })
     })
 
-    console.log('this ran')
+    console.log('checking theme and switching if needed')
   }
 
   /**
@@ -1741,10 +1745,12 @@
     initAccordion(container)
     initGetColorThemes(container)
     if (window.colorThemes) {
-      initCheckTheme()
+      initCheckTheme(container)
+      // console.log('already exists')
     } else {
       document.addEventListener('colorThemesReady', () => {
-        initCheckTheme()
+        initCheckTheme(container)
+        // console.log('newly exists')
       })
     }
     // initCheckTheme(container)

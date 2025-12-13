@@ -1760,7 +1760,31 @@
   }
 
   const initHomePage = (next) => {
-    initLenis(true)
+    if (isMobileScreen) {
+      initLenis(false)
+    } else {
+      initLenis(true)
+    }
+    let resizeTimer
+    let previousWindowWidth = window.innerWidth
+
+    function handleResize() {
+      const currentWindowWidth = window.innerWidth
+      if (currentWindowWidth !== previousWindowWidth) {
+        clearTimeout(resizeTimer)
+        resizeTimer = setTimeout(function () {
+          window.location.reload()
+          previousWindowWidth = window.innerWidth
+        }, 250)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+
+    window.addEventListener('resize', () => {
+      if (isMobileScreen) {
+        initLenis(false)
+      }
+    })
     initHomeHero(next)
     initHomeClientStack(next)
     initReviewSlider(next)

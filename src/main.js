@@ -1795,7 +1795,9 @@
   const initProjectsDetailPage = (next) => {
     projectsSlider(next)
     initPlayVideos(next)
-    window.FinsweetAttributes.modules.list.restart()
+    if (window.FinsweetAttributes && window.FinsweetAttributes.modules.list) {
+      window.FinsweetAttributes.modules.list.restart()
+    }
   }
 
   const initProjectsPage = (next) => {

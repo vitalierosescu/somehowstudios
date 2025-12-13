@@ -1782,7 +1782,6 @@
   const initContactPage = (next) => {
     initForm()
     initBasicFormValidation()
-    resetWebflow(next)
   }
 
   const initServicesPage = (next) => {

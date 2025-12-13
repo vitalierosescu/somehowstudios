@@ -1781,6 +1781,7 @@
         }, 250)
       }
     }
+    window.addEventListener('resize', handleResize)
 
     initHomeHero(next)
     initHomeClientStack(next)

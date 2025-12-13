@@ -1,34 +1,44 @@
-/* Font sizing */
-html {
-  font-size: 16px;
-}
-
-@media (min-width: 240px) and (max-width: 479px) {
-  html {
-    font-size: calc(8px + 8 * ((100vw - 240px) / 239));
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-@media (min-width: 480px) and (max-width: 767px) {
-  html {
-    font-size: calc(12px + 4 * ((100vw - 480px) / 287));
-  }
+:root {
+  --vh-in-px: 1vh;
+  --transition-ease: cubic-bezier(0.9, 0, 0.1, 1);
+  --transition-speed: 0.6s;
+  --transition-speed-slow: 0.8s;
 }
 
-@media (min-width: 768px) and (max-width: 991px) {
-  html {
-    font-size: calc(10.67px + 5.33 * ((100vw - 768px) / 223));
-  }
+.wf-design-mode {
+  --100vh: 100vh;
+  --vh: 1vh;
+  --vh-in-px: 1vh;
 }
 
-@media (min-width: 992px) and (max-width: 1439px) {
-  html {
-    font-size: min(calc(10.67px + 5.33 * ((100vw - 992px) / 447)), 14px);
-  }
+[data-animated-copy] [class^='line-'],
+.line-clip {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+  display: block;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
-@media (min-width: 1440px) {
-  html {
-    font-size: 16px;
-  }
+[data-animated-copy] [class^='line-inner-'] {
+  position: relative;
+  display: block;
+  will-change: transform;
+}
+
+.split-parent,
+.line {
+  overflow: hidden;
+  margin-top: -0.04em;
+}
+.split-child,
+.line {
+  will-change: transform;
+  padding-bottom: 0.04em;
 }

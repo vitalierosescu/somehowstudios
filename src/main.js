@@ -11,6 +11,10 @@
   var transitionOffset = 375
   var transitionNormal = 0.875
   var transitionSlider = 1
+  let splitLetters
+  let splitLines
+  let splitWords
+
   var isMobileScreen = window.matchMedia('(max-width: 767px)').matches
   const desktopQuery = '(min-width: 992px)'
 
@@ -19,6 +23,8 @@
   const loadBg = loadWrap?.querySelector('.load-bg')
   const loadBlock = loadWrap?.querySelectorAll('.load-block')
   const navW = document.querySelector('.nav-w')
+  const logo1 = document.querySelector('#logo-1')
+  const logo2 = document.querySelector('#logo-2')
 
   let ranHomeLoader = false
 
@@ -85,6 +91,17 @@
       { opacity: 0 },
       { opacity: 1, duration: 1.2, ease: 'expo.inOut' }
     )
+
+    gsap.set(logo1, { y: '110%' })
+    gsap.set(logo2, { y: '-110%' })
+
+    const tl2 = gsap.timeline({
+      delay: 0.6,
+      defaults: { ease: 'ease-transition', duration: 0.5 },
+    })
+
+    tl2.to(logo1, { y: '0%' })
+    tl2.to(logo2, { y: '0%' }, '<')
   }
 
   function transitionIn(next, name) {
@@ -103,8 +120,6 @@
 
     const spinner = document.querySelector('.loader_spinner')
     const logoSvg = document.querySelectorAll('.loader_logo-svg')
-    const logo1 = document.querySelector('#logo-1')
-    const logo2 = document.querySelector('#logo-2')
     const loaderEmblemContainer = document.querySelector(
       '.loader_emblem-container'
     )
@@ -234,6 +249,16 @@
         })
       }
 
+      gsap.set(logo1, { y: '-0%' })
+      gsap.set(logo2, { y: '0%' })
+
+      const tl2 = gsap.timeline({
+        defaults: { ease: 'ease-transition', duration: 0.5 },
+      })
+
+      tl2.to(logo1, { y: '-110%' })
+      tl2.to(logo2, { y: '110%' }, '<')
+
       tl.to(navLogo, { y: '0%', duration: 1 })
       tl.to(spinner, { opacity: 0, duration: 0 }, '<')
       tl.from(navCounter, { y: '100%', duration: 1 }, '<+=.1')
@@ -257,10 +282,6 @@
     let vh = window.innerHeight * 0.01
     document.documentElement.style.setProperty('--vh-in-px', `${vh}px`)
   }
-
-  window.addEventListener('resize', () => {
-    initCheckWindowHeight()
-  })
 
   function resetWebflow(data) {
     let parser = new DOMParser()
@@ -474,54 +495,150 @@
     })
   }
 
-  function initSplitText() {
-    const lineElements = document.querySelectorAll('[data-lines-split]')
-    if (lineElements.length) {
-      lineElements.forEach((element) => {
-        if (element.hasAttribute('data-split-initialized')) {
-          return
-        }
-        const parentSplit = new SplitText(element, {
-          type: 'lines',
-          linesClass: 'split-parent',
-        })
-        const childSplit = new SplitText(parentSplit.lines, {
-          type: 'lines',
-          linesClass: 'split-child',
-        })
-        element.parentSplit = parentSplit
-        element.childSplit = childSplit
-        element.setAttribute('data-split-initialized', 'true')
-        activeSplitTexts.push(parentSplit, childSplit)
-      })
+  // function initSplitText() {
+  //   const runSplit = () => {
+  //     const lineElements = document.querySelectorAll('[data-lines-split]')
+  //     if (lineElements.length) {
+  //       lineElements.forEach((element) => {
+  //         if (element.hasAttribute('data-split-initialized')) {
+  //           return
+  //         }
+  //         const parentSplit = new SplitText(element, {
+  //           type: 'lines',
+  //           linesClass: 'split-parent',
+  //         })
+  //         const childSplit = new SplitText(parentSplit.lines, {
+  //           type: 'lines',
+  //           linesClass: 'split-child',
+  //         })
+  //         element.parentSplit = parentSplit
+  //         element.childSplit = childSplit
+  //         element.setAttribute('data-split-initialized', 'true')
+  //         activeSplitTexts.push(parentSplit, childSplit)
+  //       })
+  //     }
+  //   }
+  //   runSplit()
+
+  //   // ————— Update on window resize
+  //   let windowWidth = $(window).innerWidth()
+  //   window.addEventListener('resize', () => {
+  //     if (windowWidth !== $(window).innerWidth()) {
+  //       windowWidth = $(window).innerWidth()
+  //       runSplit()
+  //     }
+  //   })
+  // }
+
+  window.addEventListener('resize', () => {
+    initCheckWindowHeight()
+  })
+
+  // function initScrollTriggerAnimations() {
+  //   const lineAnimElements = document.querySelectorAll(
+  //     '[data-lines-split][data-animate-scroll]'
+  //   )
+
+  //   if (lineAnimElements.length) {
+  //     lineAnimElements.forEach((element, index) => {
+  //       let delay = 0
+  //       if (element.getAttribute('data-animate-scroll') === 'delay') {
+  //         delay = index * 0.2 + 0.3
+  //         console.log(delay)
+  //       }
+  //       const parentSplit = element.parentSplit
+  //       const childSplit = element.childSplit
+  //       if (!parentSplit || !childSplit) return
+  //       gsap.from(childSplit.lines, {
+  //         yPercent: 120,
+  //         rotate: 0.001,
+  //         duration: transitionSlider,
+  //         ease: 'ease-secondary',
+  //         stagger: 0.0625,
+  //         delay: delay,
+  //         scrollTrigger: {
+  //           trigger: element,
+  //           start: 'top 95%',
+  //           toggleActions: 'play none none none',
+  //         },
+  //       })
+  //     })
+  //   }
+  // }
+
+  function initScrollTriggerAnimations(next) {
+    if (!next) {
+      next = document.querySelector('[data-barba="container"]')
     }
+
+    let textToAnimate = next.querySelectorAll('[data-animate-scroll]')
+    console.log(textToAnimate)
+
+    // setTimeout(() => {
+    textToAnimate.forEach((text) => {
+      const lines = text.querySelectorAll('.line')
+      gsap.from(lines, {
+        yPercent: 120,
+        rotate: 0.001,
+        duration: transitionSlider,
+        ease: 'ease-secondary',
+        stagger: 0.0625,
+        clearProps: 'all',
+        scrollTrigger: {
+          trigger: text,
+          start: 'top 95%',
+          toggleActions: 'play none none none',
+        },
+      })
+    })
+    // }, 1000)
   }
 
-  function initScrollTriggerAnimations() {
-    const lineAnimElements = document.querySelectorAll(
-      '[data-lines-split][data-animate-scroll]'
-    )
+  function wrapLines(container) {
+    const lines = container.querySelectorAll('.line')
 
-    if (lineAnimElements.length) {
-      lineAnimElements.forEach((element) => {
-        const parentSplit = element.parentSplit
-        const childSplit = element.childSplit
-        if (!parentSplit || !childSplit) return
-        // Animate from initial offset; ensure "from" state renders immediately
-        gsap.from(childSplit.lines, {
-          yPercent: 120,
-          rotate: 0.001,
-          duration: transitionSlider,
-          ease: 'ease-secondary',
-          stagger: 0.0625,
-          scrollTrigger: {
-            trigger: element,
-            start: 'top 80%',
-            toggleActions: 'play none none none',
-          },
-        })
-      })
+    lines.forEach((line) => {
+      if (line.parentElement.classList.contains('line-clip')) return
+
+      const wrapper = document.createElement('div')
+      wrapper.classList.add('line-clip')
+
+      line.parentNode.insertBefore(wrapper, line)
+      wrapper.appendChild(line)
+    })
+  }
+
+  function initSplitText(container) {
+    if (!container) {
+      container = document.querySelector('[data-barba="container"]')
     }
+
+    function runSplit() {
+      splitLetters = new SplitType('[data-split-letters]', {
+        types: 'words, chars',
+      })
+      splitLines = new SplitType('[data-lines-split]', {
+        types: 'lines',
+      })
+      splitWords = new SplitType('[data-split-words]', {
+        types: 'lines words',
+      })
+
+      wrapLines(container)
+    }
+    runSplit()
+
+    // ————— Update on window resize
+    let windowWidth = $(window).innerWidth()
+    window.addEventListener('resize', function () {
+      if (windowWidth !== $(window).innerWidth()) {
+        windowWidth = $(window).innerWidth()
+        splitLetters.revert()
+        splitLines.revert()
+        splitWords.revert()
+        runSplit()
+      }
+    })
   }
 
   const initHomeClientStack = (container) => {
@@ -547,25 +664,16 @@
           start: 'top 80%',
           end: 'bottom bottom',
           scrub: true,
-          // onEnter: () => {
-          //   container.classList.remove('bg-yellow')
-          //   sectionsToTransitionBg.forEach((section) => {
-          //     section.classList.add('bg-white')
-          //   })
-          //   homeHero.classList.add('visibility-hidden')
-          // },
-          // onEnterBack: () => {
-          //   container.classList.add('bg-yellow')
-          //   sectionsToTransitionBg.forEach((section) => {
-          //     section.classList.remove('bg-white')
-          //   })
-          //   homeHero.classList.remove('visibility-hidden')
-          // },
         },
       })
 
       tl.to(homeHero, { autoAlpha: 0 })
-      tl.to(sectionsToTransitionBg, { backgroundColor: '#ffffff' }, 0)
+      tl.fromTo(
+        sectionsToTransitionBg,
+        { backgroundColor: '#fdffdd' },
+        { backgroundColor: '#ffffff' },
+        0
+      )
       tl.to(container, { backgroundColor: '#ffffff' }, 0)
 
       // Check the index of section in view
@@ -1228,9 +1336,9 @@
               enabled: true,
               onlyInViewport: true,
             },
-            autoplay: {
-              delay: 3500,
-            },
+            // autoplay: {
+            //   delay: 3500,
+            // },
             navigation: {
               nextEl: wrap.querySelector('.slider_btn_element.is-next'),
               prevEl: wrap.querySelector('.slider_btn_element.is-prev'),
@@ -1532,156 +1640,6 @@
   }
 
   /**
-   * Theme Collector 1.1.1
-   * Released under the MIT License
-   * Released on: January 17, 2025
-   */
-
-  // const initGetColorThemes = () => {
-  //   function getColorThemes() {
-  //     const STORAGE_KEYS = {
-  //       THEMES: 'colorThemes_data',
-  //       PUBLISH_DATE: 'colorThemes_publishDate',
-  //     }
-  //     function getPublishDate() {
-  //       const htmlComment = document.documentElement.previousSibling
-  //       return htmlComment?.nodeType === Node.COMMENT_NODE
-  //         ? new Date(
-  //             htmlComment.textContent.match(/Last Published: (.+?) GMT/)[1]
-  //           ).getTime()
-  //         : null
-  //     }
-
-  //     function loadFromStorage() {
-  //       try {
-  //         const storedPublishDate = localStorage.getItem(
-  //             STORAGE_KEYS.PUBLISH_DATE
-  //           ),
-  //           currentPublishDate = getPublishDate()
-  //         if (
-  //           !currentPublishDate ||
-  //           !storedPublishDate ||
-  //           storedPublishDate !== currentPublishDate.toString()
-  //         )
-  //           return null
-  //         return JSON.parse(localStorage.getItem(STORAGE_KEYS.THEMES))
-  //       } catch (error) {
-  //         console.warn('Failed to load from localStorage:', error)
-  //         return null
-  //       }
-  //     }
-
-  //     function saveToStorage(themes) {
-  //       try {
-  //         const publishDate = getPublishDate()
-  //         if (publishDate) {
-  //           localStorage.setItem(
-  //             STORAGE_KEYS.PUBLISH_DATE,
-  //             publishDate.toString()
-  //           )
-  //           localStorage.setItem(STORAGE_KEYS.THEMES, JSON.stringify(themes))
-  //         }
-  //       } catch (error) {
-  //         console.warn('Failed to save to localStorage:', error)
-  //       }
-  //     }
-
-  //     window.colorThemes = {
-  //       themes: {},
-  //       getTheme(themeName = '', brandName = '') {
-  //         if (!themeName)
-  //           return this.getTheme(Object.keys(this.themes)[0], brandName)
-  //         const theme = this.themes[themeName]
-  //         if (!theme) return {}
-  //         if (!theme.brands || Object.keys(theme.brands).length === 0)
-  //           return theme
-  //         if (!brandName) return theme.brands[Object.keys(theme.brands)[0]]
-  //         return theme.brands[brandName] || {}
-  //       },
-  //     }
-
-  //     const cachedThemes = loadFromStorage()
-  //     if (cachedThemes) {
-  //       window.colorThemes.themes = cachedThemes
-  //       document.dispatchEvent(new CustomEvent('colorThemesReady'))
-  //       return
-  //     }
-
-  //     const firstLink = document.querySelector('link[rel="stylesheet"]')
-  //     if (!firstLink?.href) return null
-
-  //     const themeVariables = new Set(),
-  //       themeClasses = new Set(),
-  //       brandClasses = new Set()
-
-  //     fetch(firstLink.href)
-  //       .then((response) => {
-  //         if (!response.ok)
-  //           throw new Error(
-  //             `Failed to fetch stylesheet: ${response.statusText}`
-  //           )
-  //         return response.text()
-  //       })
-  //       .then((cssText) => {
-  //         ;(cssText.match(/--_theme[\w-]+:\s*[^;]+/g) || []).forEach(
-  //           (variable) => themeVariables.add(variable.split(':')[0].trim())
-  //         )
-  //         ;(cssText.match(/\.u-(theme|brand)-[\w-]+/g) || []).forEach(
-  //           (className) => {
-  //             if (className.startsWith('.u-theme-')) themeClasses.add(className)
-  //             if (className.startsWith('.u-brand-')) brandClasses.add(className)
-  //           }
-  //         )
-
-  //         const themeVariablesArray = Array.from(themeVariables)
-  //         function checkClass(themeClass, brandClass = null) {
-  //           let documentClasses = document.documentElement.getAttribute('class')
-  //           document.documentElement.setAttribute('class', '')
-  //           document.documentElement.classList.add(themeClass, brandClass)
-  //           const styleObject = {}
-  //           themeVariablesArray.forEach(
-  //             (variable) =>
-  //               (styleObject[variable] = getComputedStyle(
-  //                 document.documentElement
-  //               ).getPropertyValue(variable))
-  //           )
-  //           document.documentElement.setAttribute('class', documentClasses)
-  //           return styleObject
-  //         }
-
-  //         themeClasses.forEach((themeClassWithDot) => {
-  //           const themeName = themeClassWithDot
-  //             .replace('.', '')
-  //             .replace('u-theme-', '')
-  //           window.colorThemes.themes[themeName] = { brands: {} }
-  //           brandClasses.forEach((brandClassWithDot) => {
-  //             const brandName = brandClassWithDot
-  //               .replace('.', '')
-  //               .replace('u-brand-', '')
-  //             window.colorThemes.themes[themeName].brands[brandName] =
-  //               checkClass(
-  //                 themeClassWithDot.replace('.', ''),
-  //                 brandClassWithDot.replace('.', '')
-  //               )
-  //           })
-  //           if (!brandClasses.size)
-  //             window.colorThemes.themes[themeName] = checkClass(
-  //               themeClassWithDot.replace('.', '')
-  //             )
-  //         })
-
-  //         saveToStorage(window.colorThemes.themes)
-  //         document.dispatchEvent(new CustomEvent('colorThemesReady'))
-  //       })
-  //       .catch((error) => console.error('Error:', error.message))
-  //   }
-  //   window.addEventListener('DOMContentLoaded', (event) => {
-  //     getColorThemes()
-  //     console.log(window.colorThemes)
-  //   })
-  // }
-
-  /**
    *
    *
    *
@@ -1737,8 +1695,8 @@
     initLenis()
     initCheckWindowHeight()
     initParallax()
-    initSplitText()
-    initScrollTriggerAnimations()
+    initSplitText(container)
+    initScrollTriggerAnimations(container)
     initScrollProgressNumber()
     initAboutLinkAnimation(container)
     initPlayVideos(container)

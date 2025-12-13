@@ -309,18 +309,8 @@
     })
   }
 
-  function debounce(func, wait) {
-    let timeout
-    return function (...args) {
-      clearTimeout(timeout)
-      timeout = setTimeout(() => func.apply(this, args), wait)
-    }
-  }
-
-  var activeSplitTexts = []
-
   const initButton = () => {
-    const offsetIncrement = 0.01 // Transition offset increment in seconds
+    const offsetIncrement = 0 // Transition offset increment in seconds
     const buttons = document.querySelectorAll('[data-button-animate-chars]')
 
     buttons.forEach((button) => {
@@ -646,7 +636,9 @@
       container = document.querySelector('[data-barba="container"]')
     }
 
-    const sectionsToTransitionBg = container.querySelectorAll('.home--section')
+    const sectionsToTransitionBg = container.querySelectorAll(
+      '.home--section, .work-scroll_sticky-wrap.u-show-landscape'
+    )
     const homeHero = container.querySelector(
       '.section_home--hero.is--hero .home--hero_fill'
     )
@@ -817,7 +809,7 @@
 
     tl.to(targets, {
       marginTop: '45rem',
-      duration: 1.6,
+      duration: 1.2,
       ease: 'ease-primary',
     })
 
@@ -1111,7 +1103,9 @@
     const homeHero = document.querySelector(
       '.section_home--hero.is--hero .home--hero_fill'
     )
-    const sectionsToTransitionBg = document.querySelectorAll('.home--section')
+    const sectionsToTransitionBg = document.querySelectorAll(
+      '.home--section, .work-scroll_sticky-wrap.u-show-landscape'
+    )
 
     let tl = gsap.timeline({
       scrollTrigger: {
@@ -1639,6 +1633,56 @@
     })
   }
 
+  // const initSyncHomeVideos = (container) => {
+  //   const videos = Array.from(container.querySelectorAll('.loader_video'))
+  //   if (!videos.length) return
+
+  //   let startTime = null
+
+  //   // Prep videos
+  //   videos.forEach((video) => {
+  //     video.pause()
+  //     video.muted = true
+  //     video.playsInline = true
+  //     video.preload = 'auto'
+  //   })
+
+  //   // Wait for metadata on all videos
+  //   Promise.all(
+  //     videos.map(
+  //       (video) =>
+  //         new Promise((resolve) => {
+  //           if (video.readyState >= 1) {
+  //             resolve()
+  //           } else {
+  //             video.addEventListener('loadedmetadata', resolve, { once: true })
+  //           }
+  //         })
+  //     )
+  //   ).then(() => {
+  //     // Force exact same seek AFTER metadata
+  //     videos.forEach((video) => {
+  //       video.currentTime = 0
+  //     })
+
+  //     // One frame later, start all videos
+  //     requestAnimationFrame(() => {
+  //       startTime = performance.now()
+  //       videos.forEach((video) => video.play())
+  //     })
+
+  //     // Kill drift immediately
+  //     requestAnimationFrame(() => {
+  //       const master = videos[0]
+  //       videos.slice(1).forEach((video) => {
+  //         if (Math.abs(video.currentTime - master.currentTime) > 0.02) {
+  //           video.currentTime = master.currentTime
+  //         }
+  //       })
+  //     })
+  //   })
+  // }
+
   /**
    *
    *
@@ -1699,7 +1743,6 @@
     initScrollTriggerAnimations(container)
     initScrollProgressNumber()
     initAboutLinkAnimation(container)
-    initPlayVideos(container)
     initAccordion(container)
     // initGetColorThemes(container)
     if (window.colorThemes) {
@@ -1722,20 +1765,24 @@
     initHomeClientStack(next)
     initReviewSlider(next)
     initServices(next)
+    // initSyncHomeVideos(next)
   }
 
   const initProjectsDetailPage = (next) => {
     projectsSlider(next)
+    initPlayVideos(next)
     window.FinsweetAttributes.modules.list.restart()
   }
 
   const initProjectsPage = (next) => {
     initDirectionalListHover(next)
+    initPlayVideos(next)
   }
 
   const initContactPage = (next) => {
     initForm()
     initBasicFormValidation()
+    resetWebflow(next)
   }
 
   const initServicesPage = (next) => {

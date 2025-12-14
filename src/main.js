@@ -152,6 +152,7 @@
     // IF FIRST TIME ON HOME PAGE
     if (name === 'home' && !ranHomeLoader) {
       lenis.stop()
+      console.log('lenis stop if first time on home page')
       document.querySelector('body').style.cursor = 'wait'
       gsap.set(loaderEmblemWrap2, { color: '#fdffdd' })
       gsap.set(loaderEmblemContainer, { display: 'flex' })
@@ -198,6 +199,7 @@
             homeHeroLoader.style.display = 'flex'
             loaderEmblemContainer.style.display = 'none'
             lenis.start()
+            console.log('lenis starts after first time on home page')
           },
         },
         '<+1'
@@ -240,6 +242,7 @@
             gsap.set(loadWrap, { display: 'none' })
             document.body.style.cursor = 'default'
             lenis.start()
+            console.log('lenis starts')
           },
         }
       )
@@ -436,13 +439,13 @@
       .addEventListener('click', () => {
         if (navStatusEl.getAttribute('data-navigation-status') === 'active') {
           navStatusEl.setAttribute('data-navigation-status', 'not-active')
-          console.log('close nav')
           lenis.start()
+          console.log('lenis starts')
           return
         } else {
           navStatusEl.setAttribute('data-navigation-status', 'active')
           lenis.stop()
-          console.log('open nav')
+          console.log('lenis stops')
           return
         }
       })
@@ -450,11 +453,13 @@
     const closeNav = () => {
       navStatusEl.setAttribute('data-navigation-status', 'not-active')
       lenis.start()
+      console.log('lenis starts')
     }
 
     const openNav = () => {
       navStatusEl.setAttribute('data-navigation-status', 'active')
       lenis.start()
+      console.log('lenis starts')
     }
 
     // Close Navigation
@@ -481,6 +486,7 @@
         if (navStatusEl.getAttribute('data-navigation-status') === 'active') {
           navStatusEl.setAttribute('data-navigation-status', 'not-active')
           lenis.start()
+          console.log('lenis starts if esc key is pressed')
         }
       }
     })
@@ -802,9 +808,11 @@
       reversed: true,
       onStart: () => {
         lenis.stop()
+        console.log('lenis stops')
       },
       onReverseComplete: () => {
         lenis.start()
+        console.log('lenis starts')
       },
     })
 
@@ -1730,6 +1738,26 @@
     console.log('checking theme and switching if needed')
   }
 
+  let resizeTimer
+  let previousWindowWidth = window.innerWidth
+
+  function handleResize() {
+    const currentWindowWidth = window.innerWidth
+    if (currentWindowWidth !== previousWindowWidth) {
+      clearTimeout(resizeTimer)
+      resizeTimer = setTimeout(function () {
+        window.location.reload()
+        if (isMobileScreen) {
+          initLenis()
+        }
+        // lenis.start()
+        console.log('lenis starts on resize')
+        previousWindowWidth = window.innerWidth
+      }, 250)
+    }
+  }
+  window.addEventListener('resize', handleResize)
+
   /**
    *
    * INITS
@@ -1745,19 +1773,13 @@
     initScrollProgressNumber()
     initAboutLinkAnimation(container)
     initAccordion(container)
-    // initGetColorThemes(container)
     if (window.colorThemes) {
       initCheckTheme(container)
-      // console.log('already exists')
     } else {
       document.addEventListener('colorThemesReady', () => {
         initCheckTheme(container)
-        // console.log('newly exists')
       })
     }
-    // initCheckTheme(container)
-
-    // initNavMobile()
   }
 
   const initHomePage = (next) => {
@@ -1768,30 +1790,13 @@
     } else {
       initLenis(true)
     }
-    let resizeTimer
-    let previousWindowWidth = window.innerWidth
 
-    function handleResize() {
-      const currentWindowWidth = window.innerWidth
-      if (currentWindowWidth !== previousWindowWidth) {
-        clearTimeout(resizeTimer)
-        resizeTimer = setTimeout(function () {
-          window.location.reload()
-          if (isMobileScreen) {
-            initLenis(false)
-          }
-          lenis.start()
-          previousWindowWidth = window.innerWidth
-        }, 250)
-      }
-    }
-    window.addEventListener('resize', handleResize)
+    // initLenis(true)
 
     initHomeHero(next)
     initHomeClientStack(next)
     initReviewSlider(next)
     initServices(next)
-    // initSyncHomeVideos(next)
   }
 
   const initProjectsDetailPage = (next) => {
@@ -1833,6 +1838,7 @@
       lock: true,
       onComplete: () => {
         lenis.start()
+        console.log('lenis starts after barba hook')
       },
     })
 
@@ -1841,11 +1847,11 @@
 
   barba.hooks.leave((data) => {
     lenis.stop()
+    console.log('lenis stops when leaving')
   })
 
   barba.hooks.enter((data) => {
     $(data.next.container).addClass('fixed')
-    lenis.start()
   })
 
   barba.init({

@@ -1800,9 +1800,15 @@
   }
 
   const initProjectsDetailPage = (next) => {
+    console.log('init project detail page')
     projectsSlider(next)
     initPlayVideos(next)
-    if (window.FinsweetAttributes && window.FinsweetAttributes.modules.list) {
+    // Then, restart the Finsweet list module to apply filters/sort/etc.
+    if (
+      window.FinsweetAttributes &&
+      window.FinsweetAttributes.modules &&
+      window.FinsweetAttributes.modules.list
+    ) {
       window.FinsweetAttributes.modules.list.restart()
     }
   }

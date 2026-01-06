@@ -1322,46 +1322,47 @@
             console.warn('Missing required elements for Swiper in:', wrap)
             return
           }
-
-          const swiper = new Swiper(cmsWrap, {
-            slidesPerView: 'auto',
-            followFinger: true,
-            freeMode: false,
-            slideToClickedSlide: false,
-            centeredSlides: false,
-            autoHeight: false,
-            speed: 600,
-            mousewheel: {
-              forceToAxis: true,
-            },
-            loop: true,
-            keyboard: {
-              enabled: true,
-              onlyInViewport: true,
-            },
-            // autoplay: {
-            //   delay: 3500,
-            // },
-            navigation: {
-              nextEl: wrap.querySelector('.slider_btn_element.is-next'),
-              prevEl: wrap.querySelector('.slider_btn_element.is-prev'),
-            },
-            pagination: {
-              el: wrap.querySelector('.slider_bullet_wrap'),
-              bulletActiveClass: 'is-active',
-              bulletClass: 'slider_bullet_item',
-              bulletElement: 'button',
-              clickable: true,
-            },
-            scrollbar: {
-              el: wrap.querySelector('.slider_draggable_wrap'),
-              draggable: true,
-              dragClass: 'slider_draggable_handle',
-              snapOnRelease: true,
-            },
-            slideActiveClass: 'is-active',
-            slideDuplicateActiveClass: 'is-active',
-          })
+          if (!cmsWrap.querySelector('.w-dyn-empty')) {
+            const swiper = new Swiper(cmsWrap, {
+              slidesPerView: 'auto',
+              followFinger: true,
+              freeMode: false,
+              slideToClickedSlide: false,
+              centeredSlides: false,
+              autoHeight: false,
+              speed: 600,
+              mousewheel: {
+                forceToAxis: true,
+              },
+              loop: true,
+              keyboard: {
+                enabled: true,
+                onlyInViewport: true,
+              },
+              // autoplay: {
+              //   delay: 3500,
+              // },
+              navigation: {
+                nextEl: wrap.querySelector('.slider_btn_element.is-next'),
+                prevEl: wrap.querySelector('.slider_btn_element.is-prev'),
+              },
+              pagination: {
+                el: wrap.querySelector('.slider_bullet_wrap'),
+                bulletActiveClass: 'is-active',
+                bulletClass: 'slider_bullet_item',
+                bulletElement: 'button',
+                clickable: true,
+              },
+              scrollbar: {
+                el: wrap.querySelector('.slider_draggable_wrap'),
+                draggable: true,
+                dragClass: 'slider_draggable_handle',
+                snapOnRelease: true,
+              },
+              slideActiveClass: 'is-active',
+              slideDuplicateActiveClass: 'is-active',
+            })
+          }
         })
     }
   }
@@ -1811,6 +1812,16 @@
     ) {
       window.FinsweetAttributes.modules.list.restart()
     }
+
+    // if (next.querySelector('[fs-list-element="next-empty"]')) {
+    //   console.log('yuh')
+    //   next.querySelector('[data-next="empty"]').classList.remove('hide')
+    //   next.querySelector('[data-next="default"]').classList.add('hide')
+    // }
+    // if (next.querySelectorAll('[fs-list-element="prev-empty"]').length) {
+    //   next.querySelector('[data-prev="empty"]').classList.remove('hide')
+    //   next.querySelector('[data-prev="default"]').classList.add('hide')
+    // }
   }
 
   const initProjectsPage = (next) => {

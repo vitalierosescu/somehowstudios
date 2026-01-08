@@ -34,11 +34,45 @@
   }
 
   function initLenis(isHome = false) {
-    if (Webflow.env('editor')) return
+    // lenis = new Lenis({
+    //   duration: 0.8,
+    //   infinite: isHome ? true : false,
+    //   // syncTouch: true,
+    // })
+
+    // if (isHome) {
+    //   lenis = new Lenis({
+    //     duration: 0.8,
+    //     infinite: true,
+    //     // syncTouch: true,
+    //   })
+    // } else {
+    //   lenis = new Lenis({
+    //     duration: 0.8,
+    //   })
+    // }
     lenis = new Lenis({
       duration: 0.8,
-      infinite: isHome ? true : false,
-      // syncTouch: true,
+    })
+
+    function raf(time) {
+      lenis.raf(time)
+      requestAnimationFrame(raf)
+    }
+
+    lenis.scrollTo(0, {
+      offset: 0,
+      duration: 0.2,
+      force: true,
+    })
+
+    requestAnimationFrame(raf)
+  }
+
+  function initLenisHome() {
+    lenis = new Lenis({
+      duration: 0.8,
+      infinite: true,
     })
 
     function raf(time) {
@@ -151,7 +185,7 @@
 
     // IF FIRST TIME ON HOME PAGE
     if (name === 'home' && !ranHomeLoader) {
-      lenis.stop()
+      // lenis.stop()
       console.log('lenis stop if first time on home page')
       document.querySelector('body').style.cursor = 'wait'
       gsap.set(loaderEmblemWrap2, { color: '#fdffdd' })
@@ -444,7 +478,7 @@
           return
         } else {
           navStatusEl.setAttribute('data-navigation-status', 'active')
-          // lenis.stop()
+          lenis.stop()
           console.log('lenis stops')
           return
         }
@@ -842,7 +876,7 @@
         trigger.parentElement.getAttribute('data-link') === 'about'
       ) {
         trigger.addEventListener('click', (event) => {
-          if (trigger.tagName === 'A') event.preventDefault()
+          //if (trigger.tagName === 'A') event.preventDefault()
           aboutSection.classList.add('is--active')
 
           if (tl.reversed()) {
@@ -1749,7 +1783,7 @@
       resizeTimer = setTimeout(function () {
         window.location.reload()
         if (isMobileScreen) {
-          initLenis()
+          // initLenis()
         }
         // lenis.start()
         console.log('lenis starts on resize')
@@ -1765,8 +1799,9 @@
    *
    */
   const initGlobal = (container) => {
-    initButton()
+    console.log('init global called')
     initLenis()
+    initButton()
     initCheckWindowHeight()
     initParallax()
     initSplitText(container)
@@ -1786,10 +1821,16 @@
   const initHomePage = (next) => {
     let isMobileScreen = window.matchMedia('(max-width: 767px)').matches
 
+    // if (isMobileScreen) {
+    //   initLenis(false)
+    // } else {
+    //   initLenis(true)
+    // }
+
     if (isMobileScreen) {
-      initLenis(false)
+      initLenisHome()
     } else {
-      initLenis(true)
+      initLenisHome()
     }
 
     // initLenis(true)
@@ -1801,7 +1842,6 @@
   }
 
   const initProjectsDetailPage = (next) => {
-    console.log('init project detail page')
     projectsSlider(next)
     initPlayVideos(next)
     // Then, restart the Finsweet list module to apply filters/sort/etc.
@@ -1812,16 +1852,6 @@
     ) {
       window.FinsweetAttributes.modules.list.restart()
     }
-
-    // if (next.querySelector('[fs-list-element="next-empty"]')) {
-    //   console.log('yuh')
-    //   next.querySelector('[data-next="empty"]').classList.remove('hide')
-    //   next.querySelector('[data-next="default"]').classList.add('hide')
-    // }
-    // if (next.querySelectorAll('[fs-list-element="prev-empty"]').length) {
-    //   next.querySelector('[data-prev="empty"]').classList.remove('hide')
-    //   next.querySelector('[data-prev="default"]').classList.add('hide')
-    // }
   }
 
   const initProjectsPage = (next) => {
@@ -1849,23 +1879,24 @@
     $('.is--transitioning').removeClass('is--transitioning')
     resetWebflow(data)
     ScrollTrigger.refresh()
-    lenis.scrollTo(0, {
-      immediate: true,
-      force: true,
-      lock: true,
-      onComplete: () => {
-        lenis.start()
-        console.log('lenis starts after barba hook')
-      },
-    })
+    // lenis.destroy()
+    // lenis.start()
+    // lenis.scrollTo(0, {
+    //   immediate: true,
+    //   force: true,
+    //   // lock: true,
+    //   onComplete: () => {
+    //     lenis.start()
+    //   },
+    // })
+    initLenis()
     lenis.start()
 
     // initCheckTheme(data.next.container)
   })
 
   barba.hooks.leave((data) => {
-    //lenis.stop()
-    console.log('lenis stops when leaving')
+    lenis.destroy()
   })
 
   barba.hooks.enter((data) => {
@@ -1883,9 +1914,6 @@
         name: 'default',
         // sync: true,
         once(data) {
-          // document.addEventListener('colorThemesReady', () => {
-          //   initCheckTheme()
-          // })
           initNavMobile()
         },
         leave(data) {
@@ -1921,6 +1949,7 @@
           let next = data.next.container
           transitionIn(next)
           initGlobal(next)
+          initLenis()
           //
           initProjectsPage(next)
         },
@@ -1931,6 +1960,7 @@
           let next = data.next.container
           transitionIn(next)
           initGlobal(next)
+          initLenis()
           //
           initProjectsDetailPage(next)
         },
@@ -1951,6 +1981,7 @@
           let next = data.next.container
           transitionIn(next)
           initGlobal(next)
+          initLenis()
 
           initServicesPage()
         },
@@ -1959,6 +1990,7 @@
         namespace: 'about',
         afterEnter(data) {
           let next = data.next.container
+          initLenis()
           transitionIn(next)
           initGlobal(next)
         },
@@ -1968,6 +2000,7 @@
         afterEnter(data) {
           let next = data.next.container
           transitionIn(next)
+          initLenis()
           initGlobal(next)
         },
       },
@@ -1976,6 +2009,7 @@
         afterEnter(data) {
           let next = data.next.container
           transitionIn(next)
+          initLenis()
           initGlobal(next)
         },
       },

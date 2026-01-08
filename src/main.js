@@ -444,7 +444,7 @@
           return
         } else {
           navStatusEl.setAttribute('data-navigation-status', 'active')
-          lenis.stop()
+          // lenis.stop()
           console.log('lenis stops')
           return
         }
@@ -1858,6 +1858,7 @@
         console.log('lenis starts after barba hook')
       },
     })
+    lenis.start()
 
     // initCheckTheme(data.next.container)
   })

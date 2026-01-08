@@ -1889,7 +1889,7 @@
     //     lenis.start()
     //   },
     // })
-    initLenis()
+    // initLenis()
     lenis.start()
 
     // initCheckTheme(data.next.container)

@@ -1864,7 +1864,7 @@
   })
 
   barba.hooks.leave((data) => {
-    lenis.stop()
+    //lenis.stop()
     console.log('lenis stops when leaving')
   })
 

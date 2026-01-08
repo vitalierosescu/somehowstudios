@@ -1964,6 +1964,14 @@
         },
       },
       {
+        namespace: 'legal',
+        afterEnter(data) {
+          let next = data.next.container
+          transitionIn(next)
+          initGlobal(next)
+        },
+      },
+      {
         namespace: 'default',
         afterEnter(data) {
           let next = data.next.container

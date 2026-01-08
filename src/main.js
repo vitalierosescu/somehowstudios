@@ -1828,7 +1828,7 @@
     // }
 
     if (isMobileScreen) {
-      initLenisHome()
+      initLenis()
     } else {
       initLenisHome()
     }

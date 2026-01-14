@@ -324,25 +324,24 @@
   function resetWebflow(data) {
     let parser = new DOMParser()
     let dom = parser.parseFromString(data.next.html, 'text/html')
-    let webflowPageId = $(dom).find('html').attr('data-wf-page')
-    $('html').attr('data-wf-page', webflowPageId)
+    let webflowPageId = dom.querySelector('html').getAttribute('data-wf-page')
+    document.querySelector('html').setAttribute('data-wf-page', webflowPageId)
+
     window.Webflow && window.Webflow.destroy()
     window.Webflow && window.Webflow.ready()
-    const ix2 = window.Webflow?.require('ix2')
-    if (typeof ix2 !== 'undefined') {
-      ix2.init()
-    }
-    // Remove ALL previous states everywhere
-    $('a[aria-current="page"]').removeAttr('aria-current')
-    $('a.w--current').removeClass('w--current')
 
-    // Re-apply state
-    $('a[href]').each(function () {
-      const href = $(this).attr('href')
-      if (!href) return
+    document.querySelectorAll('a[aria-current="page"]').forEach((el) => {
+      el.removeAttribute('aria-current')
+    })
+    document.querySelectorAll('a.w--current').forEach((el) => {
+      el.classList.remove('w--current')
+    })
 
+    document.querySelectorAll('a[href]').forEach((link) => {
+      const href = link.getAttribute('href')
       if (href === window.location.pathname) {
-        $(this).addClass('w--current').attr('aria-current', 'page')
+        link.classList.add('w--current')
+        link.setAttribute('aria-current', 'page')
       }
     })
   }
@@ -1401,8 +1400,12 @@
     }
   }
 
-  const initForm = () => {
-    document.querySelectorAll('.form_input').forEach((field) => {
+  const initForm = (next) => {
+    if (!next) {
+      next = document.querySelector('[data-barba="container"]')
+    }
+
+    next.querySelectorAll('.form_input').forEach((field) => {
       const label = field
         .closest('.form-field-group')
         ?.querySelector('.form_label')
@@ -1431,8 +1434,11 @@
     })
   }
 
-  function initBasicFormValidation() {
-    const forms = document.querySelectorAll('[data-form-validate]')
+  function initBasicFormValidation(next) {
+    if (!next) {
+      next = document.querySelector('[data-barba="container"]')
+    }
+    const forms = next.querySelectorAll('[data-form-validate]')
 
     forms.forEach((form) => {
       const fields = form.querySelectorAll(
@@ -1525,6 +1531,7 @@
 
       // Handle clicking the custom submit button
       submitButtonDiv.addEventListener('click', function () {
+        console.log('clicked')
         // Validate the form first
         if (validateAndStartLiveValidationForAll()) {
           // Only check for spam after all fields are valid
@@ -1532,6 +1539,10 @@
             alert('Form submitted too quickly. Please try again.')
             return // Stop form submission
           }
+
+          // form.querySelector('form').submit()
+          console.log(form)
+
           submitInput.click() // Simulate a click on the <input type="submit">
         }
       })
@@ -1548,12 +1559,235 @@
               alert('Form submitted too quickly. Please try again.')
               return // Stop form submission
             }
+
+            //form.submit()
+            console.log(form)
             submitInput.click() // Trigger our custom form submission
           }
         }
       })
     })
   }
+
+  /*
+  function initBasicFormValidation(next) {
+    if (!next) {
+      next = document.querySelector('[data-barba="container"]')
+    }
+    const forms = next.querySelectorAll('[data-form-validate]')
+
+    forms.forEach((formWrapper) => {
+      const fields = formWrapper.querySelectorAll(
+        '[data-validate] input, [data-validate] textarea'
+      )
+      const submitButtonDiv = formWrapper.querySelector('[data-submit]')
+      const actualForm = formWrapper.querySelector('form')
+
+      if (!actualForm) return
+
+      // Remove Webflow's form handling
+      if (formWrapper.classList.contains('w-form')) {
+        formWrapper.classList.remove('w-form')
+      }
+
+      // Find success and error divs
+      const successDiv = formWrapper.querySelector('.w-form-done')
+      const errorDiv = formWrapper.querySelector('.w-form-fail')
+
+      if (successDiv) successDiv.style.display = 'none'
+      if (errorDiv) errorDiv.style.display = 'none'
+
+      const formLoadTime = new Date().getTime()
+
+      const validateField = (field) => {
+        const parent = field.closest('[data-validate]')
+        const minLength = field.getAttribute('min')
+        const maxLength = field.getAttribute('max')
+        const type = field.getAttribute('type')
+        let isValid = true
+
+        if (field.value.trim() !== '') {
+          parent.classList.add('is--filled')
+        } else {
+          parent.classList.remove('is--filled')
+        }
+
+        if (minLength && field.value.length < minLength) {
+          isValid = false
+        }
+
+        if (maxLength && field.value.length > maxLength) {
+          isValid = false
+        }
+
+        if (type === 'email' && !/\S+@\S+\.\S+/.test(field.value)) {
+          isValid = false
+        }
+
+        if (isValid) {
+          parent.classList.remove('is--error')
+          parent.classList.add('is--success')
+        } else {
+          parent.classList.remove('is--success')
+          parent.classList.add('is--error')
+        }
+
+        return isValid
+      }
+
+      const startLiveValidation = (field) => {
+        field.addEventListener('input', function () {
+          validateField(field)
+        })
+      }
+
+      const validateAndStartLiveValidationForAll = () => {
+        let allValid = true
+        let firstInvalidField = null
+
+        fields.forEach((field) => {
+          const valid = validateField(field)
+          if (!valid && !firstInvalidField) {
+            firstInvalidField = field
+          }
+          if (!valid) {
+            allValid = false
+          }
+          startLiveValidation(field)
+        })
+
+        if (firstInvalidField) {
+          firstInvalidField.focus()
+        }
+
+        return allValid
+      }
+
+      const isSpam = () => {
+        const currentTime = new Date().getTime()
+        const timeDifference = (currentTime - formLoadTime) / 1000
+        return timeDifference < 5
+      }
+
+      // Custom form submission handler
+      actualForm.onsubmit = async (event) => {
+        event.preventDefault()
+
+        if (!validateAndStartLiveValidationForAll()) {
+          return
+        }
+
+        if (isSpam()) {
+          if (errorDiv) {
+            errorDiv.textContent =
+              'Form submitted too quickly. Please try again.'
+            errorDiv.style.display = 'block'
+          }
+          return
+        }
+
+        try {
+          // Hide any previous messages
+          if (errorDiv) errorDiv.style.display = 'none'
+          if (successDiv) successDiv.style.display = 'none'
+
+          // Show loading state
+          if (submitButtonDiv) {
+            submitButtonDiv.style.opacity = '0.5'
+            submitButtonDiv.style.pointerEvents = 'none'
+          }
+
+          // Get form data
+          const formData = new FormData(actualForm)
+          const action = actualForm.getAttribute('action')
+          const method = (
+            actualForm.getAttribute('method') || 'POST'
+          ).toUpperCase()
+
+          // Prepare fetch options
+          const fetchOptions = {
+            method: method,
+          }
+
+          // Only add body for methods that support it
+          if (['POST', 'PUT', 'PATCH'].includes(method)) {
+            fetchOptions.body = formData
+          } else if (method === 'GET') {
+            // For GET, append form data to URL as query params
+            const params = new URLSearchParams(formData)
+            const url = `${action}?${params.toString()}`
+            const response = await fetch(url, { method: 'GET' })
+
+            if (!response.ok) {
+              throw new Error('Form submission failed')
+            }
+
+            // Success - hide form and show success message
+            actualForm.style.display = 'none'
+            if (successDiv) {
+              successDiv.style.display = 'block'
+            }
+
+            console.log('Form submitted successfully')
+            return
+          }
+
+          // Submit to Webflow's endpoint (for POST/PUT/PATCH)
+          const response = await fetch(action, fetchOptions)
+
+          // Reset button state
+          if (submitButtonDiv) {
+            submitButtonDiv.style.opacity = '1'
+            submitButtonDiv.style.pointerEvents = 'auto'
+          }
+
+          if (!response.ok) {
+            throw new Error('Form submission failed')
+          }
+
+          // Success - hide form and show success message
+          actualForm.style.display = 'none'
+          if (successDiv) {
+            successDiv.style.display = 'block'
+          }
+
+          console.log('Form submitted successfully')
+        } catch (error) {
+          console.error('Form submission error:', error)
+
+          // Reset button state
+          if (submitButtonDiv) {
+            submitButtonDiv.style.opacity = '1'
+            submitButtonDiv.style.pointerEvents = 'auto'
+          }
+
+          // Show error message
+          if (errorDiv) {
+            errorDiv.textContent =
+              'There was an error submitting the form. Please try again.'
+            errorDiv.style.display = 'block'
+          }
+        }
+      }
+
+      // Handle custom submit button click
+      if (submitButtonDiv) {
+        submitButtonDiv.addEventListener('click', function (e) {
+          e.preventDefault()
+          actualForm.dispatchEvent(new Event('submit'))
+        })
+      }
+
+      // Handle Enter key
+      formWrapper.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') {
+          event.preventDefault()
+          actualForm.dispatchEvent(new Event('submit'))
+        }
+      })
+    })
+  }
+  */
 
   /*
   function initServices(container) {
@@ -1860,8 +2094,8 @@
   }
 
   const initContactPage = (next) => {
-    initForm()
-    initBasicFormValidation()
+    initForm(next)
+    initBasicFormValidation(next)
   }
 
   const initServicesPage = (next) => {
@@ -1972,7 +2206,7 @@
           transitionIn(next)
           initGlobal(next)
 
-          initContactPage()
+          initContactPage(next)
         },
       },
       {

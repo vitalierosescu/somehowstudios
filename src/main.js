@@ -2079,6 +2079,7 @@
     projectsSlider(next)
     initPlayVideos(next)
     // Then, restart the Finsweet list module to apply filters/sort/etc.
+    /*
     if (
       window.FinsweetAttributes &&
       window.FinsweetAttributes.modules &&
@@ -2086,6 +2087,7 @@
     ) {
       window.FinsweetAttributes.modules.list.restart()
     }
+    */
   }
 
   const initProjectsPage = (next) => {
